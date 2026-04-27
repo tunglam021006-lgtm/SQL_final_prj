@@ -1,0 +1,385 @@
+{% extends 'web/base.html' %} {% block content %}
+<style>
+    .tx-filter-card {
+        background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .tx-empty {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    
+    .modal-content {
+        background: #2d1743;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .table-light th {
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+    
+    .tx-amount-income {
+        color: #22c55e !important;
+    }
+    
+    .tx-amount-expense {
+        color: #f87171 !important;
+    }
+    
+    .tx-amount-transfer {
+        color: #60a5fa !important;
+    }
+    
+    .pagination-soft {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">📄 {{ T.transactions_title }}</h1>
+        <p class="page-subtitle">{{ T.transactions_subtitle }}</p>
+    </div>
+
+    <button class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#addTxModal">
+        {% if LANG_CODE == 'vi' %}
+            + Thêm mới
+        {% else %}
+            + Add New
+        {% endif %}
+    </button>
+</div>
+
+<div class="card shadow-sm border-0 mb-4 tx-filter-card">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">
+                    {% if LANG_CODE == 'vi' %}
+                        Lọc theo loại
+                    {% else %}
+                        Filter by type
+                    {% endif %}
+                </label>
+                <select class="form-select" name="type">
+                    <option value="" {% if not selected_type %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}
+                            Tất cả
+                        {% else %}
+                            All Types
+                        {% endif %}
+                    </option>
+                    <option value="expense" {% if selected_type == 'expense' %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}Chi tiêu{% else %}Expense{% endif %}
+                    </option>
+                    <option value="income" {% if selected_type == 'income' %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}Thu nhập{% else %}Income{% endif %}
+                    </option>
+                    <option value="transfer" {% if selected_type == 'transfer' %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}Chuyển khoản{% else %}Transfer{% endif %}
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    {% if LANG_CODE == 'vi' %}
+                        Sắp xếp theo
+                    {% else %}
+                        Sort by
+                    {% endif %}
+                </label>
+                <select class="form-select" name="sort">
+                    <option value="-occurred_at" {% if selected_sort == '-occurred_at' %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}Mới nhất trước{% else %}Newest First{% endif %}
+                    </option>
+                    <option value="occurred_at" {% if selected_sort == 'occurred_at' %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}Cũ nhất trước{% else %}Oldest First{% endif %}
+                    </option>
+                    <option value="-amount" {% if selected_sort == '-amount' %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}Số tiền cao nhất{% else %}Highest Amount{% endif %}
+                    </option>
+                    <option value="amount" {% if selected_sort == 'amount' %}selected{% endif %}>
+                        {% if LANG_CODE == 'vi' %}Số tiền thấp nhất{% else %}Lowest Amount{% endif %}
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    {% if LANG_CODE == 'vi' %}
+                        Áp dụng bộ lọc
+                    {% else %}
+                        Apply Filter
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>{{ T.table_date }}</th>
+                    <th>{{ T.table_type }}</th>
+                    <th>{{ T.table_category }}</th>
+                    <th>{{ T.table_account }}</th>
+                    <th>{{ T.table_amount }}</th>
+                    <th>{{ T.table_note }}</th>
+                    <th class="text-end pe-4">
+                        {% if LANG_CODE == 'vi' %} Hành động {% else %} Action {% endif %}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if page_obj %} {% for tx in page_obj %}
+                <tr>
+                    <td>
+                        {{ tx.occurred_at|date:"d/m/Y" }}
+                        <br>
+                        <small class="text-muted">{{ tx.occurred_at|date:"H:i" }}</small>
+                    </td>
+
+                    <td>
+                        {% if tx.type == 'income' %}
+                        <span class="badge bg-success">
+                                        {% if LANG_CODE == 'vi' %}Thu nhập{% else %}Income{% endif %}
+                                    </span> {% elif tx.type == 'expense' %}
+                        <span class="badge bg-danger">
+                                        {% if LANG_CODE == 'vi' %}Chi tiêu{% else %}Expense{% endif %}
+                                    </span> {% else %}
+                        <span class="badge bg-primary">
+                                        {% if LANG_CODE == 'vi' %}Chuyển khoản{% else %}Transfer{% endif %}
+                                    </span> {% endif %}
+                    </td>
+
+                    <td>
+                        {% if tx.category %} {{ tx.category.name }} {% else %} - {% endif %}
+                    </td>
+
+                    <td>
+                        {{ tx.account.name }} {% if tx.destination_account %}
+                        <br><small class="text-muted">→ {{ tx.destination_account.name }}</small> {% endif %}
+                    </td>
+
+                    <td class="fw-bold {% if tx.type == 'income' %}tx-amount-income{% elif tx.type == 'expense' %}tx-amount-expense{% else %}tx-amount-transfer{% endif %}">
+                        {{ tx.amount|floatformat:0 }} ₫
+                    </td>
+
+                    <td class="text-muted small">{{ tx.notes|default:"" }}</td>
+
+                    <td class="text-end pe-4">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="transaction_id" value="{{ tx.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == " vi " %}Xóa giao dịch này? Số dư tài khoản sẽ được cập nhật lại.{% else %}Delete this transaction? Account balances will be updated.{% endif %}')">
+                                        {% if LANG_CODE == 'vi' %}
+                                            Xóa
+                                        {% else %}
+                                            Delete
+                                        {% endif %}
+                                    </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %} {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        {% if LANG_CODE == 'vi' %} Không tìm thấy giao dịch nào. {% else %} No transactions found. {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.08);">
+        <div class="small pagination-soft">
+            {% if LANG_CODE == 'vi' %} Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} {% else %} Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} {% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+            {% if page_obj.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}&type={{ selected_type }}&sort={{ selected_sort }}">
+                    {% if LANG_CODE == 'vi' %}Trước{% else %}Previous{% endif %}
+                </a> {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled>
+                    {% if LANG_CODE == 'vi' %}Trước{% else %}Previous{% endif %}
+                </button> {% endif %} {% if page_obj.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}&type={{ selected_type }}&sort={{ selected_sort }}">
+                    {% if LANG_CODE == 'vi' %}Sau{% else %}Next{% endif %}
+                </a> {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled>
+                    {% if LANG_CODE == 'vi' %}Sau{% else %}Next{% endif %}
+                </button> {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addTxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if LANG_CODE == 'vi' %} Thêm giao dịch {% else %} Add Transaction {% endif %}
+                </h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form method="post" id="transaction-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ T.table_type }}</label>
+                        <select class="form-select" name="type" id="tx-type" required>
+                            <option value="expense">{% if LANG_CODE == 'vi' %}Chi tiêu{% else %}Expense{% endif %}</option>
+                            <option value="income">{% if LANG_CODE == 'vi' %}Thu nhập{% else %}Income{% endif %}</option>
+                            <option value="transfer">{% if LANG_CODE == 'vi' %}Chuyển khoản{% else %}Transfer{% endif %}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ T.amount }}</label>
+                        <input type="number" class="form-control" name="amount" min="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Tài khoản nguồn
+                            {% else %}
+                                Source Account
+                            {% endif %}
+                        </label>
+                        <select class="form-select" name="account" required>
+                            {% for acc in accounts %}
+                                <option value="{{ acc.id }}">{{ acc.name }} ({{ acc.current_balance|floatformat:0 }} {{ acc.currency }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="destination-account-group" style="display: none;">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Tài khoản đích
+                            {% else %}
+                                Destination Account
+                            {% endif %}
+                        </label>
+                        <select class="form-select" name="destination_account" id="destination-account-select">
+                            <option value="">
+                                {% if LANG_CODE == 'vi' %}
+                                    -- Chọn tài khoản đích --
+                                {% else %}
+                                    -- Select destination account --
+                                {% endif %}
+                            </option>
+                            {% for acc in accounts %}
+                                <option value="{{ acc.id }}">{{ acc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="category-group">
+                        <label class="form-label">{{ T.table_category }}</label>
+                        <select class="form-select" name="category" id="category-select">
+                            <option value="">
+                                {% if LANG_CODE == 'vi' %}
+                                    -- Chọn danh mục --
+                                {% else %}
+                                    -- Select category --
+                                {% endif %}
+                            </option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" data-type="{{ cat.type }}">
+                                    {{ cat.name }} ({{ cat.type }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Ngày & giờ
+                            {% else %}
+                                Date & Time
+                            {% endif %}
+                        </label>
+                        <input type="datetime-local" class="form-control" name="occurred_at">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ T.notes }}</label>
+                        <input type="text" class="form-control" name="notes" placeholder="{% if LANG_CODE == 'vi' %}Ghi chú tùy chọn{% else %}Optional note{% endif %}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        {% if LANG_CODE == 'vi' %}
+                            Lưu giao dịch
+                        {% else %}
+                            Save Transaction
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+    function updateTransactionForm() {
+        const type = document.getElementById('tx-type').value;
+        const categoryGroup = document.getElementById('category-group');
+        const categorySelect = document.getElementById('category-select');
+        const destinationGroup = document.getElementById('destination-account-group');
+        const destinationSelect = document.getElementById('destination-account-select');
+
+        const options = categorySelect.querySelectorAll('option');
+
+        if (type === 'transfer') {
+            categoryGroup.style.display = 'none';
+            categorySelect.value = '';
+            destinationGroup.style.display = 'block';
+        } else {
+            destinationGroup.style.display = 'none';
+            destinationSelect.value = '';
+            categoryGroup.style.display = 'block';
+
+            options.forEach(option => {
+                if (!option.value) {
+                    option.hidden = false;
+                    return;
+                }
+
+                const optionType = option.getAttribute('data-type');
+                option.hidden = optionType !== type;
+            });
+
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            if (selectedOption && selectedOption.hidden) {
+                categorySelect.value = '';
+            }
+        }
+    }
+
+    document.getElementById('tx-type').addEventListener('change', updateTransactionForm);
+    updateTransactionForm();
+</script>
+{% endblock %}

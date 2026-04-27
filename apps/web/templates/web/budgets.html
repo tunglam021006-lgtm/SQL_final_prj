@@ -1,0 +1,235 @@
+{% extends 'web/base.html' %} {% block content %}
+<style>
+    .budget-card {
+        background: rgba(255, 255, 255, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .budget-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    }
+    
+    .budget-empty {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    
+    .budget-meta {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.92rem;
+    }
+    
+    .modal-content {
+        background: #2d1743;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">📊 {{ T.budgets_title }}</h1>
+        <p class="page-subtitle">{{ T.budgets_subtitle }}</p>
+    </div>
+
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+        <i class="bi bi-plus-circle"></i>
+        {% if LANG_CODE == 'vi' %}
+            Tạo ngân sách
+        {% else %}
+            Create Budget
+        {% endif %}
+    </button>
+</div>
+
+<div class="row">
+    {% if budget_rows %} {% for row in budget_rows %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-0 budget-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="card-title fw-bold mb-1" style="color:#60a5fa;">{{ row.budget.category.name }}</h5>
+                        <div class="budget-meta">
+                            {{ row.budget.month }}/{{ row.budget.year }} • {% if row.budget.period == 'monthly' %} {% if LANG_CODE == 'vi' %}Hàng tháng{% else %}Monthly{% endif %} {% else %} {% if LANG_CODE == 'vi' %}Hàng tuần{% else %}Weekly{% endif %} {% endif %}
+                        </div>
+                    </div>
+
+                    {% if row.status == 'over' %}
+                    <span class="badge bg-danger">
+                                    {% if LANG_CODE == 'vi' %}Vượt{% else %}Over{% endif %}
+                                </span> {% elif row.status == 'warning' %}
+                    <span class="badge bg-warning text-dark">
+                                    {% if LANG_CODE == 'vi' %}Cảnh báo{% else %}Warning{% endif %}
+                                </span> {% else %}
+                    <span class="badge bg-success">
+                                    {% if LANG_CODE == 'vi' %}An toàn{% else %}Safe{% endif %}
+                                </span> {% endif %}
+                </div>
+
+                <div class="mb-2">
+                    <strong>{% if LANG_CODE == 'vi' %}Ngân sách:{% else %}Budget:{% endif %}</strong> {{ row.budget.amount|floatformat:0 }} VND
+                </div>
+
+                <div class="mb-2">
+                    <strong>{% if LANG_CODE == 'vi' %}Đã chi:{% else %}Spent:{% endif %}</strong> {{ row.spent|floatformat:0 }} VND
+                </div>
+
+                <div class="mb-2">
+                    <strong>{% if LANG_CODE == 'vi' %}Còn lại:{% else %}Remaining:{% endif %}</strong> {{ row.remaining|floatformat:0 }} VND
+                </div>
+
+                <div class="mb-2">
+                    <strong>{% if LANG_CODE == 'vi' %}Ngưỡng cảnh báo:{% else %}Alert threshold:{% endif %}</strong> {{ row.budget.alert_threshold }}%
+                </div>
+
+                <div class="progress my-3" style="height: 10px;">
+                    <div class="progress-bar {% if row.status == 'over' %}bg-danger{% elif row.status == 'warning' %}bg-warning{% else %}bg-success{% endif %}" style="width: {% if row.usage_percent > 100 %}100{% else %}{{ row.usage_percent }}{% endif %}%;">
+                    </div>
+                </div>
+
+                <div class="small text-muted mb-3">
+                    {% if LANG_CODE == 'vi' %} Mức sử dụng: {{ row.usage_percent }}% {% else %} Usage: {{ row.usage_percent }}% {% endif %}
+                </div>
+
+                <form method="post" class="d-grid">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="budget_id" value="{{ row.budget.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == " vi " %}Xóa ngân sách này?{% else %}Delete this budget?{% endif %}')">
+                                {% if LANG_CODE == 'vi' %}
+                                    Xóa ngân sách
+                                {% else %}
+                                    Delete Budget
+                                {% endif %}
+                            </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="col-12">
+        <div class="alert budget-empty text-center">
+            {% if LANG_CODE == 'vi' %} Chưa có ngân sách nào. Hãy tạo một ngân sách để theo dõi chi tiêu. {% else %} No budgets set. Create one to track your spending. {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="addBudgetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if LANG_CODE == 'vi' %} Tạo ngân sách mới {% else %} Create New Budget {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Danh mục chi tiêu
+                            {% else %}
+                                Expense Category
+                            {% endif %}
+                        </label>
+                        <select class="form-select" name="category" required>
+                            {% for cat in expense_categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Số tiền giới hạn (VND)
+                            {% else %}
+                                Limit Amount (VND)
+                            {% endif %}
+                        </label>
+                        <input type="number" class="form-control" name="amount" min="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Chu kỳ
+                            {% else %}
+                                Period
+                            {% endif %}
+                        </label>
+                        <select class="form-select" name="period">
+                            <option value="monthly">
+                                {% if LANG_CODE == 'vi' %}Hàng tháng{% else %}Monthly{% endif %}
+                            </option>
+                            <option value="weekly">
+                                {% if LANG_CODE == 'vi' %}Hàng tuần{% else %}Weekly{% endif %}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">
+                                {% if LANG_CODE == 'vi' %}
+                                    Tháng
+                                {% else %}
+                                    Month
+                                {% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="month" min="1" max="12" value="{{ current_month }}" required>
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label class="form-label">
+                                {% if LANG_CODE == 'vi' %}
+                                    Năm
+                                {% else %}
+                                    Year
+                                {% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="year" min="2000" max="2100" value="{{ current_year }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Ngưỡng cảnh báo (%)
+                            {% else %}
+                                Alert Threshold (%)
+                            {% endif %}
+                        </label>
+                        <input type="number" class="form-control" name="alert_threshold" min="1" max="100" value="80" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        {% if LANG_CODE == 'vi' %}
+                            Lưu ngân sách
+                        {% else %}
+                            Save Budget
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}{% endblock %}

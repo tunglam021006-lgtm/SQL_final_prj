@@ -1,0 +1,275 @@
+{% extends 'web/base.html' %} {% block content %}
+<style>
+    .category-empty {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    
+    .modal-content {
+        background: #2d1743;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .table-light th {
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+    
+    .tree-child {
+        padding-left: 24px;
+        color: rgba(255, 255, 255, 0.88);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">🏷️ {{ T.categories_title }}</h1>
+        <p class="page-subtitle">{{ T.categories_subtitle }}</p>
+    </div>
+
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#catModal">
+        <i class="bi bi-plus-circle"></i>
+        {% if LANG_CODE == 'vi' %}
+            Thêm danh mục
+        {% else %}
+            Add Category
+        {% endif %}
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">
+                    {% if LANG_CODE == 'vi' %} Danh mục thu nhập {% else %} Income Categories {% endif %}
+                </h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">
+                                {% if LANG_CODE == 'vi' %}Tên{% else %}Name{% endif %}
+                            </th>
+                            <th>
+                                {% if LANG_CODE == 'vi' %}Loại{% else %}Type{% endif %}
+                            </th>
+                            <th class="text-end pe-4">
+                                {% if LANG_CODE == 'vi' %}Hành động{% else %}Action{% endif %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if income_rows %} {% for row in income_rows %}
+                        <tr>
+                            <td class="ps-4">
+                                {% if row.level == 0 %}
+                                <strong>{{ row.category.name }}</strong> {% else %}
+                                <span class="tree-child">↳ {{ row.category.name }}</span> {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-success">
+                                            {% if LANG_CODE == 'vi' %}
+                                                Thu nhập
+                                            {% else %}
+                                                Income
+                                            {% endif %}
+                                        </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="category_id" value="{{ row.category.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == " vi " %}Xóa danh mục này?{% else %}Delete this category?{% endif %}')">
+                                                {% if LANG_CODE == 'vi' %}
+                                                    Xóa
+                                                {% else %}
+                                                    Delete
+                                                {% endif %}
+                                            </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %} {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-muted">
+                                {% if LANG_CODE == 'vi' %} Chưa có danh mục thu nhập. {% else %} No income categories. {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">
+                    {% if LANG_CODE == 'vi' %} Danh mục chi tiêu {% else %} Expense Categories {% endif %}
+                </h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">
+                                {% if LANG_CODE == 'vi' %}Tên{% else %}Name{% endif %}
+                            </th>
+                            <th>
+                                {% if LANG_CODE == 'vi' %} Đã chi ({{ current_month }}/{{ current_year }}) {% else %} Spent ({{ current_month }}/{{ current_year }}) {% endif %}
+                            </th>
+                            <th>
+                                {% if LANG_CODE == 'vi' %}Ngân sách{% else %}Budget{% endif %}
+                            </th>
+                            <th class="text-end pe-4">
+                                {% if LANG_CODE == 'vi' %}Hành động{% else %}Action{% endif %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if expense_rows %} {% for row in expense_rows %}
+                        <tr>
+                            <td class="ps-4">
+                                {% if row.level == 0 %}
+                                <strong>{{ row.category.name }}</strong> {% else %}
+                                <span class="tree-child">↳ {{ row.category.name }}</span> {% endif %}
+                            </td>
+                            <td class="fw-semibold">{{ row.spent|floatformat:0 }}</td>
+                            <td>
+                                {% if row.budget %} {{ row.budget.amount|floatformat:0 }} {% else %}
+                                <span class="text-muted">-</span> {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="category_id" value="{{ row.category.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == " vi " %}Xóa danh mục này?{% else %}Delete this category?{% endif %}')">
+                                                {% if LANG_CODE == 'vi' %}
+                                                    Xóa
+                                                {% else %}
+                                                    Delete
+                                                {% endif %}
+                                            </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %} {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">
+                                {% if LANG_CODE == 'vi' %} Chưa có danh mục chi tiêu. {% else %} No expense categories. {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="catModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if LANG_CODE == 'vi' %} Thêm danh mục {% else %} Add Category {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Tên danh mục
+                            {% else %}
+                                Category Name
+                            {% endif %}
+                        </label>
+                        <input type="text" class="form-control" name="name" required placeholder="{% if LANG_CODE == 'vi' %}VD: Ăn uống, Lương{% else %}e.g. Food, Salary{% endif %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Loại
+                            {% else %}
+                                Type
+                            {% endif %}
+                        </label>
+                        <select class="form-select" name="type">
+                            <option value="expense">
+                                {% if LANG_CODE == 'vi' %}
+                                    Chi tiêu
+                                {% else %}
+                                    Expense
+                                {% endif %}
+                            </option>
+                            <option value="income">
+                                {% if LANG_CODE == 'vi' %}
+                                    Thu nhập
+                                {% else %}
+                                    Income
+                                {% endif %}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Danh mục cha (tùy chọn)
+                            {% else %}
+                                Parent Category (Optional)
+                            {% endif %}
+                        </label>
+                        <select class="form-select" name="parent_id">
+                            <option value="">
+                                {% if LANG_CODE == 'vi' %}
+                                    -- Không có --
+                                {% else %}
+                                    -- None --
+                                {% endif %}
+                            </option>
+                            {% for parent in parent_candidates %}
+                                <option value="{{ parent.id }}">
+                                    {{ parent.name }}
+                                    ({% if parent.type == 'income' %}{% if LANG_CODE == 'vi' %}thu nhập{% else %}income{% endif %}{% else %}{% if LANG_CODE == 'vi' %}chi tiêu{% else %}expense{% endif %}{% endif %})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        {% if LANG_CODE == 'vi' %}
+                            Lưu danh mục
+                        {% else %}
+                            Save Category
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}{% endblock %}

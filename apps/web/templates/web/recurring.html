@@ -1,0 +1,297 @@
+{% extends 'web/base.html' %} {% load humanize %} {% block content %}
+<style>
+    .recurring-card {
+        background: rgba(255, 255, 255, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .recurring-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    }
+    
+    .recurring-empty {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    
+    .modal-content {
+        background: #2d1743;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center pt-2 pb-2 mb-4 border-bottom">
+    <div>
+        <h1 class="page-title">🔁 {{ T.recurring_title }}</h1>
+        <p class="page-subtitle">{{ T.recurring_subtitle }}</p>
+    </div>
+
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#recurringModal">
+        + {{ T.add_recurring }}
+    </button>
+</div>
+
+<div class="row">
+    {% if recurring_items %} {% for item in recurring_items %}
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100 recurring-card">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0 fw-bold">{{ item.title }}</h5>
+                    <div class="section-caption">
+                        {{ item.type|title }} • {% if item.frequency == 'weekly' %} {{ T.weekly }} {% else %} {{ T.monthly }} {% endif %}
+                    </div>
+                </div>
+
+                {% if item.is_due %}
+                <span class="badge bg-danger">{{ T.due }}</span> {% else %}
+                <span class="badge bg-info text-dark">{{ item.next_due_date|date:"d/m/Y" }}</span> {% endif %}
+            </div>
+
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ T.amount }}</span>
+                    <span class="fw-bold">{{ item.amount|floatformat:0|intcomma }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ T.source }}</span>
+                    <span class="fw-bold">{{ item.account.name }}</span>
+                </div>
+
+                {% if item.type == 'transfer' and item.destination_account %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ T.destination }}</span>
+                    <span class="fw-bold">{{ item.destination_account.name }}</span>
+                </div>
+                {% endif %} {% if item.category %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ T.table_category }}</span>
+                    <span class="fw-bold">{{ item.category.name }}</span>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>{{ T.next_due }}</span>
+                    <span class="fw-bold">{{ item.next_due_date|date:"d/m/Y" }}</span>
+                </div>
+
+                {% if item.notes %}
+                <p class="status-soft mb-3">{{ item.notes }}</p>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <form method="post" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="apply_now">
+                        <input type="hidden" name="recurring_id" value="{{ item.id }}">
+                        <button type="submit" class="btn btn-outline-primary w-100">{{ T.apply_now }}</button>
+                    </form>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="recurring_id" value="{{ item.id }}">
+                        <button type="submit" class="btn btn-outline-danger">
+                                    {% if LANG_CODE == 'vi' %}
+                                        Xóa
+                                    {% else %}
+                                        Delete
+                                    {% endif %}
+                                </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center py-5 recurring-empty">
+                <h5 class="mb-2">{{ T.no_recurring_yet }}</h5>
+                <p class="empty-state-text mb-3">{{ T.recurring_subtitle }}</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#recurringModal">
+                        {{ T.create_first_recurring }}
+                    </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="recurringModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">{{ T.add_recurring }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ T.title }}</label>
+                            <input type="text" name="title" class="form-control" placeholder="{% if LANG_CODE == 'vi' %}Lương hàng tháng{% else %}Monthly Salary{% endif %}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ T.table_type }}</label>
+                            <select name="type" id="recurring-type" class="form-select" required onchange="toggleRecurringFields()">
+                                <option value="income">{{ T.type_income|title }}</option>
+                                <option value="expense">{{ T.type_expense|title }}</option>
+                                <option value="transfer">{{ T.type_transfer|title }}</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ T.amount }}</label>
+                            <input type="number" name="amount" class="form-control" min="1" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ T.frequency }}</label>
+                            <select name="frequency" class="form-select" required>
+                                <option value="monthly">{{ T.monthly }}</option>
+                                <option value="weekly">{{ T.weekly }}</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ T.source }}</label>
+                            <select name="account" class="form-select" required>
+                                {% for account in accounts %}
+                                    <option value="{{ account.id }}">{{ account.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3" id="destination-wrapper" style="display:none;">
+                            <label class="form-label">{{ T.destination }}</label>
+                            <select name="destination_account" class="form-select">
+                                <option value="">
+                                    {% if LANG_CODE == 'vi' %}
+                                        -- Tùy chọn --
+                                    {% else %}
+                                        -- Optional --
+                                    {% endif %}
+                                </option>
+                                {% for account in accounts %}
+                                    <option value="{{ account.id }}">{{ account.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3" id="expense-category-wrapper" style="display:none;">
+                            <label class="form-label">
+                                {% if LANG_CODE == 'vi' %}
+                                    Danh mục chi tiêu
+                                {% else %}
+                                    Expense Category
+                                {% endif %}
+                            </label>
+                            <select name="category" class="form-select">
+                                <option value="">
+                                    {% if LANG_CODE == 'vi' %}
+                                        -- Tùy chọn --
+                                    {% else %}
+                                        -- Optional --
+                                    {% endif %}
+                                </option>
+                                {% for category in expense_categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3" id="income-category-wrapper">
+                            <label class="form-label">
+                                {% if LANG_CODE == 'vi' %}
+                                    Danh mục thu nhập
+                                {% else %}
+                                    Income Category
+                                {% endif %}
+                            </label>
+                            <select name="category" class="form-select">
+                                <option value="">
+                                    {% if LANG_CODE == 'vi' %}
+                                        -- Tùy chọn --
+                                    {% else %}
+                                        -- Optional --
+                                    {% endif %}
+                                </option>
+                                {% for category in income_categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ T.next_due }}</label>
+                            <input type="date" name="next_due_date" class="form-control" required>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label">{{ T.notes }}</label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="{% if LANG_CODE == 'vi' %}Ghi chú tùy chọn{% else %}Optional notes{% endif %}"></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="auto_create" id="autoCreate">
+                                <label class="form-check-label" for="autoCreate">
+                                    {% if LANG_CODE == 'vi' %}
+                                        Tự tạo sau này
+                                    {% else %}
+                                        Auto create later
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">{{ T.cancel }}</button>
+                    <button type="submit" class="btn btn-primary">{{ T.save_recurring }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleRecurringFields() {
+        const type = document.getElementById("recurring-type").value;
+        const destinationWrapper = document.getElementById("destination-wrapper");
+        const expenseCategoryWrapper = document.getElementById("expense-category-wrapper");
+        const incomeCategoryWrapper = document.getElementById("income-category-wrapper");
+
+        if (type === "transfer") {
+            destinationWrapper.style.display = "block";
+            expenseCategoryWrapper.style.display = "none";
+            incomeCategoryWrapper.style.display = "none";
+        } else if (type === "expense") {
+            destinationWrapper.style.display = "none";
+            expenseCategoryWrapper.style.display = "block";
+            incomeCategoryWrapper.style.display = "none";
+        } else {
+            destinationWrapper.style.display = "none";
+            expenseCategoryWrapper.style.display = "none";
+            incomeCategoryWrapper.style.display = "block";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", toggleRecurringFields);
+</script>
+{% endblock %}

@@ -1,0 +1,473 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ LANG_CODE }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ T.app_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #09020f 0%, #2f0d49 45%, #4f1b73 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+        
+        .container {
+            max-width: 1280px;
+        }
+        
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(107, 44, 145, 0.30);
+            background: rgba(77, 52, 126, 0.35);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(192, 179, 217, 0.18);
+            color: #ffffff;
+        }
+        
+        .card-header {
+            background: rgba(107, 44, 145, 0.35) !important;
+            border-bottom: 1px solid rgba(192, 179, 217, 0.18);
+            color: #ffffff !important;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #6B2C91 0%, #4A1A6B 100%) !important;
+            box-shadow: 0 4px 15px rgba(107, 44, 145, 0.45);
+            border-bottom: 1px solid rgba(192, 179, 217, 0.25);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #FFFFFF !important;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.92) !important;
+            border-radius: 8px;
+        }
+        
+        .nav-link:hover {
+            background: rgba(192, 179, 217, 0.16);
+            color: #fff !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6B2C91 0%, #4A1A6B 100%);
+            border: 1px solid rgba(192, 179, 217, 0.4);
+            color: #fff;
+        }
+        
+        .btn-outline-primary {
+            color: #d7c7f1;
+            border-color: rgba(215, 199, 241, 0.5);
+        }
+        
+        .btn-outline-primary:hover {
+            background: rgba(215, 199, 241, 0.12);
+            color: #fff;
+            border-color: rgba(215, 199, 241, 0.8);
+        }
+        
+        .btn-logout {
+            background: rgba(192, 179, 217, 0.16);
+            color: #fff;
+            border: 1px solid rgba(192, 179, 217, 0.45);
+            font-weight: 600;
+        }
+        
+        .btn-logout:hover {
+            background: rgba(192, 179, 217, 0.30);
+            color: #fff;
+        }
+        
+        .lang-toggle .btn {
+            min-width: 78px;
+        }
+        
+        .table {
+            color: #f5efff;
+            margin-bottom: 0;
+        }
+        
+        .table> :not(caption)>*>* {
+            background-color: transparent !important;
+            color: inherit;
+            border-bottom-color: rgba(192, 179, 217, 0.18);
+        }
+        
+        .table-light {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+        }
+        
+        .form-control,
+        .form-select,
+        textarea {
+            background: rgba(68, 50, 101, 0.92);
+            border: 1px solid rgba(192, 179, 217, 0.30);
+            color: #f3ecff;
+        }
+        
+        .form-control::placeholder,
+        textarea::placeholder {
+            color: rgba(243, 236, 255, 0.68);
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 12px;
+        }
+        
+        .alert-success {
+            background: rgba(209, 244, 223, 0.9);
+            color: #12412b;
+        }
+        
+        .alert-danger {
+            background: rgba(255, 220, 225, 0.9);
+            color: #5e1220;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 240, 196, 0.95);
+            color: #5f4700;
+        }
+        
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            backdrop-filter: blur(8px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .lang-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 72px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.92rem;
+            line-height: 1;
+            color: #f3eaff;
+            background: transparent;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.10);
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+        
+        .lang-btn.active {
+            background: linear-gradient(135deg, #ffffff 0%, #f4ecff 100%);
+            color: #4b1f6f;
+            border-color: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        }
+        
+        .lang-btn .flag {
+            font-size: 1.05rem;
+            line-height: 1;
+        }
+        
+        .lang-btn .lang-code {
+            letter-spacing: 0.4px;
+        }
+        
+        @media (max-width: 768px) {
+            .language-switcher {
+                gap: 6px;
+                padding: 3px;
+            }
+            .lang-btn {
+                min-width: 58px;
+                padding: 7px 10px;
+                font-size: 0.85rem;
+            }
+            .lang-btn .lang-code {
+                display: none;
+            }
+        }
+        
+        .card .text-muted {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
+        
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            backdrop-filter: blur(8px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .lang-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 72px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.92rem;
+            line-height: 1;
+            color: #f3eaff;
+            background: transparent;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.10);
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+        
+        .lang-btn.active {
+            background: linear-gradient(135deg, #ffffff 0%, #f4ecff 100%);
+            color: #4b1f6f;
+            border-color: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        }
+        
+        .flag-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+            flex-shrink: 0;
+        }
+        
+        .lang-code {
+            letter-spacing: 0.4px;
+        }
+        
+        @media (max-width: 768px) {
+            .language-switcher {
+                gap: 6px;
+                padding: 3px;
+            }
+            .lang-btn {
+                min-width: 58px;
+                padding: 7px 10px;
+                font-size: 0.85rem;
+            }
+            .lang-code {
+                display: none;
+            }
+        }
+        
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.72) !important;
+            font-size: 0.98rem;
+            font-weight: 400;
+            margin-top: -6px;
+            margin-bottom: 0;
+        }
+        
+        .page-subtitle a,
+        .page-subtitle span {
+            color: inherit !important;
+            text-decoration: none !important;
+        }
+        
+        .page-subtitle::selection {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+        
+        .page-title {
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.74) !important;
+            font-size: 0.98rem;
+            font-weight: 400;
+            margin-bottom: 0;
+        }
+        
+        .text-muted,
+        .small.text-muted,
+        .card .text-muted,
+        .card-body .text-muted,
+        .modal-content .text-muted,
+        .offcanvas .text-muted {
+            color: rgba(255, 255, 255, 0.68) !important;
+        }
+        
+        .form-label,
+        .form-check-label,
+        .modal-title,
+        .card-body small,
+        .table small {
+            color: rgba(255, 255, 255, 0.88) !important;
+        }
+        
+        .table td,
+        .table th {
+            color: #f5efff !important;
+        }
+        
+        .table thead th {
+            color: #ffffff !important;
+        }
+        
+        .modal-content,
+        .offcanvas,
+        .offcanvas-body,
+        .offcanvas-header {
+            color: #ffffff;
+        }
+        
+        .border-bottom,
+        .border-top {
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        
+        .empty-state-text {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
+        
+        .section-caption {
+            color: rgba(255, 255, 255, 0.76) !important;
+        }
+        
+        .status-soft {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
+        
+        .page-title {
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.74) !important;
+            font-size: 0.98rem;
+            font-weight: 400;
+            margin-bottom: 0;
+        }
+        
+        .text-muted,
+        .small.text-muted,
+        .card .text-muted,
+        .card-body .text-muted,
+        .modal-content .text-muted,
+        .offcanvas .text-muted {
+            color: rgba(255, 255, 255, 0.68) !important;
+        }
+        
+        .form-label,
+        .form-check-label,
+        .modal-title,
+        .card-body small,
+        .table small {
+            color: rgba(255, 255, 255, 0.88) !important;
+        }
+        
+        .table td,
+        .table th {
+            color: #f5efff !important;
+        }
+        
+        .table thead th {
+            color: #ffffff !important;
+        }
+        
+        .empty-state-text {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
+        
+        .section-caption {
+            color: rgba(255, 255, 255, 0.76) !important;
+        }
+        
+        .status-soft {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
+    </style>
+</head>
+
+<body>
+    {% if request.user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard/">💸 {{ T.app_name }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard/">{{ T.nav_dashboard }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/transactions/">{{ T.nav_transactions }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/accounts/">{{ T.nav_wallets }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/categories/">{{ T.nav_categories }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/budgets/">{{ T.nav_budgets }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/goals/">{{ T.nav_goals }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recurring/">{{ T.nav_recurring }}</a></li>
+                </ul>
+
+                <div class="language-switcher me-3">
+                    <a href="/language/vi/?next={{ request.get_full_path }}" class="lang-btn {% if LANG_CODE == 'vi' %}active{% endif %}" title="Tiếng Việt">
+                        <img src="{% static 'web/images/flags/vn.svg' %}" alt="VI" class="flag-icon">
+                        <span class="lang-code">VI</span>
+                    </a>
+
+                    <a href="/language/en/?next={{ request.get_full_path }}" class="lang-btn {% if LANG_CODE == 'en' %}active{% endif %}" title="English">
+                        <img src="{% static 'web/images/flags/gb.svg' %}" alt="EN" class="flag-icon">
+                        <span class="lang-code">EN</span>
+                    </a>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-white fw-semibold">Hi, {{ request.user.username }}</span>
+                    <a href="/logout/" class="btn btn-light btn-sm btn-logout">{{ T.logout }}</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container">
+        {% if messages %} {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %} mt-3">
+            {{ message }}
+        </div>
+        {% endfor %} {% endif %} {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

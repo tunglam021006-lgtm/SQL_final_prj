@@ -1,0 +1,669 @@
+{% extends 'web/base.html' %} {% load humanize %} {% block content %}
+<style>
+    .floating-quick-btn {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 1050;
+        border-radius: 999px;
+        padding: 14px 18px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    }
+    
+    .quick-drawer .offcanvas-header,
+    .quick-drawer .offcanvas-body {
+        background: linear-gradient(180deg, #2b1240 0%, #3a1b57 100%);
+        color: #fff;
+    }
+    
+    .quick-drawer .offcanvas-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .quick-drawer .btn-close {
+        filter: invert(1);
+        opacity: 0.9;
+    }
+    
+    .quick-add-input {
+        background: rgba(255, 255, 255, 0.10) !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        color: #fff !important;
+    }
+    
+    .quick-add-input::placeholder {
+        color: rgba(255, 255, 255, 0.68);
+    }
+    
+    .quick-chip {
+        border-radius: 999px;
+    }
+    
+    .shortcut-item {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.03);
+        text-align: left;
+        color: #fff;
+    }
+    
+    .shortcut-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+    
+    .shortcut-title {
+        font-weight: 700;
+        color: #fff;
+    }
+    
+    .shortcut-subtitle {
+        font-size: 0.88rem;
+        color: rgba(255, 255, 255, 0.68);
+    }
+</style>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-4 border-bottom">
+    <div>
+        <h1 class="h2" style="color: #ffffff; font-weight: 700;">📊 {{ T.dashboard_title }}</h1>
+        <p class="mb-0 text-light opacity-75">
+            {% if LANG_CODE == 'vi' %} Tổng quan tháng {{ current_month }}/{{ current_year }} {% else %} Overview for {{ current_month }}/{{ current_year }} {% endif %}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#quickActionsDrawer">
+            {{ T.quick_actions }}
+        </button>
+        <a href="/transactions/" class="btn btn-outline-primary">{{ T.view_all_transactions }}</a>
+        <a href="/budgets/" class="btn btn-primary">{{ T.manage_budgets }}</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white h-100 border-0" style="background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%) !important;">
+            <div class="card-body text-center">
+                <h6 class="card-title">{{ T.total_income }}</h6>
+                <h2 class="display-6 fw-bold">{{ total_income|floatformat:0|intcomma }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white h-100 border-0" style="background: linear-gradient(135deg, #ff6b81 0%, #ff9ff3 100%) !important;">
+            <div class="card-body text-center">
+                <h6 class="card-title">{{ T.total_expense }}</h6>
+                <h2 class="display-6 fw-bold">{{ total_expense|floatformat:0|intcomma }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white h-100 border-0" style="background: linear-gradient(135deg, #3867d6 0%, #4b7bec 100%) !important;">
+            <div class="card-body text-center">
+                <h6 class="card-title">{{ T.net_cashflow }}</h6>
+                <h2 class="display-6 fw-bold">{{ net_savings|floatformat:0|intcomma }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white h-100 border-0" style="background: linear-gradient(135deg, #20bf6b 0%, #0fb9b1 100%) !important;">
+            <div class="card-body text-center">
+                <h6 class="card-title">{{ T.wallet_balance }}</h6>
+                <h2 class="display-6 fw-bold">{{ total_wallet_balance|floatformat:0|intcomma }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="small text-muted">{{ T.transactions_this_month }}</div>
+                <div class="fs-3 fw-bold">{{ monthly_transaction_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="small text-muted">{{ T.largest_expense }}</div>
+                <div class="fs-5 fw-bold">
+                    {% if largest_expense %} {{ largest_expense.amount|floatformat:0|intcomma }} {% else %} - {% endif %}
+                </div>
+                <div class="small text-muted">
+                    {% if largest_expense and largest_expense.category %} {{ largest_expense.category.name }} {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="small text-muted">{{ T.expense_categories_used }}</div>
+                <div class="fs-3 fw-bold">{{ expense_categories_used }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="small text-muted">{{ T.budget_risk }}</div>
+                <div class="fs-5 fw-bold">{{ warning_budget_count }} warning / {{ over_budget_count }} over</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">{{ T.cashflow_trend }}</h5>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 280px;">
+                    <canvas id="cashflowTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">{{ T.expense_breakdown }}</h5>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 280px;">
+                    <canvas id="expenseBreakdownChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">{{ T.budget_vs_spent }}</h5>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 260px;">
+                    <canvas id="budgetComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">{{ T.wallet_distribution }}</h5>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 260px;">
+                    <canvas id="walletDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">{{ T.budget_alerts }}</h5>
+            </div>
+            <div class="card-body">
+                {% if budget_rows %} {% for row in budget_rows %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold">{{ row.category }}</span>
+                        <span class="small">{{ row.spent|floatformat:0|intcomma }} / {{ row.budget_amount|floatformat:0|intcomma }}</span>
+                    </div>
+
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar {% if row.status == 'over' %}bg-danger{% elif row.status == 'warning' %}bg-warning{% else %}bg-success{% endif %}" style="width: {% if row.usage_percent > 100 %}100{% else %}{{ row.usage_percent|floatformat:0 }}{% endif %}%;">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-2 small">
+                        <span>{{ T.usage }}: {{ row.usage_percent }}%</span>
+                        <span>{{ T.remaining }}: {{ row.remaining|floatformat:0|intcomma }}</span>
+                    </div>
+
+                    {% if row.status == 'over' %}
+                    <div class="mt-2 text-danger fw-semibold">{{ T.over_budget }}</div>
+                    {% elif row.status == 'warning' %}
+                    <div class="mt-2 text-warning fw-semibold">{{ T.near_budget_limit }}</div>
+                    {% else %}
+                    <div class="mt-2 text-success fw-semibold">{{ T.within_budget }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %} {% else %}
+                <p class="text-muted mb-0">No budgets set for this month yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold">{{ T.top_spending_categories }}</h5>
+            </div>
+            <div class="card-body">
+                {% if top_expense_categories %} {% for row in top_expense_categories %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ row.category__name }}</span>
+                        <span class="fw-bold">{{ row.total|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-info" style="width: {{ row.pct|floatformat:0 }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %} {% else %}
+                <p class="text-muted mb-0">No expense data for this month.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">{{ T.goals_overview }}</h5>
+                        <a href="/goals/" class="btn btn-sm btn-outline-primary">{{ T.open }}</a>
+                    </div>
+                    <div class="card-body">
+                        {% if active_goals %} {% for goal in active_goals %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold">{{ goal.name }}</span>
+                                <span>{{ goal.progress_percent }}%</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: {{ goal.progress_percent }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span>{{ goal.current_amount|floatformat:0|intcomma }} / {{ goal.target_amount|floatformat:0|intcomma }}</span>
+                                <span>Remaining: {{ goal.remaining_amount|floatformat:0|intcomma }}</span>
+                            </div>
+                        </div>
+                        {% endfor %} {% else %}
+                        <p class="text-muted mb-0">No financial goals yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header py-3">
+                        <h5 class="mb-0 fw-bold">{{ T.recurring_due_soon }}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recurring_due_soon %} {% for item in recurring_due_soon %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                            <div>
+                                <div class="fw-semibold">{{ item.title }}</div>
+                                <div class="small text-light opacity-75">
+                                    {{ item.type|title }} • {{ item.frequency|title }}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">{{ item.amount|floatformat:0|intcomma }}</div>
+                                <div class="small text-light opacity-75">{{ item.next_due_date|date:"d/m/Y" }}</div>
+                            </div>
+                        </div>
+                        {% endfor %} {% else %}
+                        <p class="text-muted mb-0">{{ T.no_recurring_due }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h5 class="mb-0 fw-bold">{{ T.recent_transactions }}</h5>
+        <a href="/transactions/" class="btn btn-sm btn-outline-primary">{{ T.see_all }}</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>{{ T.table_date }}</th>
+                    <th>{{ T.table_type }}</th>
+                    <th>{{ T.table_category }}</th>
+                    <th>{{ T.table_account }}</th>
+                    <th>{{ T.table_amount }}</th>
+                    <th>{{ T.table_note }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_transactions %} {% for tx in recent_transactions %}
+                <tr>
+                    <td>{{ tx.occurred_at|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if tx.type == 'income' %}
+                        <span class="badge bg-success">{{ T.type_income }}</span> {% elif tx.type == 'expense' %}
+                        <span class="badge bg-danger">{{ T.type_expense }}</span> {% else %}
+                        <span class="badge bg-primary">{{ T.type_transfer }}</span> {% endif %}
+                    </td>
+                    <td>{% if tx.category %}{{ tx.category.name }}{% else %}-{% endif %}</td>
+                    <td>
+                        {{ tx.account.name }} {% if tx.destination_account %}
+                        <br><small class="text-muted">→ {{ tx.destination_account.name }}</small> {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ tx.amount|floatformat:0|intcomma }}</td>
+                    <td>{{ tx.notes|default:"" }}</td>
+                </tr>
+                {% endfor %} {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No recent transactions.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<button class="btn btn-primary floating-quick-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#quickActionsDrawer">
+    ⚡ {{ T.quick_add_title }}
+</button>
+
+<div class="offcanvas offcanvas-end quick-drawer" tabindex="-1" id="quickActionsDrawer">
+    <div class="offcanvas-header">
+        <div>
+            <h5 class="offcanvas-title mb-1">⚡ {{ T.quick_actions }}</h5>
+            <div class="small text-light opacity-75">{{ T.quick_add_hint }}</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+
+    <div class="offcanvas-body">
+        <div class="mb-4">
+            <h6 class="fw-bold mb-2">{{ T.quick_add_title }}</h6>
+            <p class="small text-light opacity-75 mb-3">{{ T.quick_add_examples }}</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="quick_add">
+                <div class="input-group input-group-lg mb-3">
+                    <span class="input-group-text" style="background: rgba(255,255,255,0.10); color: #fff; border-color: rgba(255,255,255,0.18);">
+                        ⚡
+                    </span>
+                    <input type="text" name="quick_text" id="quick-add-input" class="form-control quick-add-input" placeholder="{{ T.quick_add_placeholder }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">{{ T.save_fast }}</button>
+            </form>
+
+            <div class="mt-3 d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary quick-chip" onclick="fillQuickAdd('45k coffee')">45k coffee</button>
+                <button type="button" class="btn btn-sm btn-outline-primary quick-chip" onclick="fillQuickAdd('120k food')">120k food</button>
+                <button type="button" class="btn btn-sm btn-outline-primary quick-chip" onclick="fillQuickAdd('100k mua quần áo')">100k mua quần áo</button>
+                <button type="button" class="btn btn-sm btn-outline-primary quick-chip" onclick="fillQuickAdd('500k chuyển Momo')">500k chuyển Momo</button>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h6 class="fw-bold mb-2">{{ T.one_tap_repeat }}</h6>
+            {% if quick_templates %} {% for item in quick_templates %}
+            <form method="post" class="mb-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="repeat">
+                <input type="hidden" name="transaction_id" value="{{ item.id }}">
+                <button type="submit" class="shortcut-item">
+                            <div class="shortcut-title">{{ item.title }}</div>
+                            <div class="shortcut-subtitle">{{ item.subtitle }}</div>
+                        </button>
+            </form>
+            {% endfor %} {% else %}
+            <p class="text-muted mb-0">{{ T.no_templates }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h6 class="fw-bold mb-2">{{ T.recurring_suggestions }}</h6>
+            {% if recurring_suggestions %} {% for item in recurring_suggestions %}
+            <form method="post" class="mb-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="repeat">
+                <input type="hidden" name="transaction_id" value="{{ item.id }}">
+                <button type="submit" class="shortcut-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="shortcut-title">{{ item.title }}</div>
+                                    <div class="shortcut-subtitle">{{ item.subtitle }}</div>
+                                </div>
+                                <span class="badge bg-info text-dark">{{ T.recurring_badge }}</span>
+                            </div>
+                        </button>
+            </form>
+            {% endfor %} {% else %}
+            <p class="text-muted mb-0">{{ T.no_recurring }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    function fillQuickAdd(value) {
+        const input = document.getElementById('quick-add-input');
+        if (input) {
+            input.value = value;
+            input.focus();
+        }
+    }
+
+    const trendLabels = JSON.parse('{{ trend_labels_json|escapejs }}');
+    const trendIncome = JSON.parse('{{ trend_income_json|escapejs }}');
+    const trendExpense = JSON.parse('{{ trend_expense_json|escapejs }}');
+    const trendNet = JSON.parse('{{ trend_net_json|escapejs }}');
+
+    const expenseLabels = JSON.parse('{{ expense_chart_labels_json|escapejs }}');
+    const expenseValues = JSON.parse('{{ expense_chart_values_json|escapejs }}');
+
+    const accountLabels = JSON.parse('{{ account_chart_labels_json|escapejs }}');
+    const accountValues = JSON.parse('{{ account_chart_values_json|escapejs }}');
+
+    const budgetLabels = JSON.parse('{{ budget_chart_labels_json|escapejs }}');
+    const budgetLimitValues = JSON.parse('{{ budget_limit_values_json|escapejs }}');
+    const budgetSpentValues = JSON.parse('{{ budget_spent_values_json|escapejs }}');
+
+    const chartTextColor = '#f3ecff';
+    const gridColor = 'rgba(255,255,255,0.08)';
+    const fmt = (value) => new Intl.NumberFormat('vi-VN').format(value);
+
+    const LABEL_INCOME = "{{ T.chart_income|escapejs }}";
+    const LABEL_EXPENSE = "{{ T.chart_expense|escapejs }}";
+    const LABEL_NET = "{{ T.chart_net|escapejs }}";
+    const LABEL_BUDGET = "{{ T.chart_budget|escapejs }}";
+    const LABEL_SPENT = "{{ T.chart_spent|escapejs }}";
+
+    const commonLegend = {
+        labels: {
+            color: chartTextColor
+        }
+    };
+
+    if (document.getElementById('cashflowTrendChart')) {
+        new Chart(document.getElementById('cashflowTrendChart'), {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: LABEL_INCOME,
+                    data: trendIncome,
+                    borderColor: '#20bf6b',
+                    backgroundColor: 'rgba(32,191,107,0.18)',
+                    tension: 0.35
+                }, {
+                    label: LABEL_EXPENSE,
+                    data: trendExpense,
+                    borderColor: '#ff6b81',
+                    backgroundColor: 'rgba(255,107,129,0.18)',
+                    tension: 0.35
+                }, {
+                    label: LABEL_NET,
+                    data: trendNet,
+                    borderColor: '#4b7bec',
+                    backgroundColor: 'rgba(75,123,236,0.18)',
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: commonLegend,
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${fmt(context.raw)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: chartTextColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: chartTextColor,
+                            callback: function(value) {
+                                return fmt(value);
+                            }
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (document.getElementById('expenseBreakdownChart')) {
+        new Chart(document.getElementById('expenseBreakdownChart'), {
+            type: 'doughnut',
+            data: {
+                labels: expenseLabels,
+                datasets: [{
+                    data: expenseValues,
+                    backgroundColor: ['#ff6b81', '#f39c12', '#4b7bec', '#20bf6b', '#a55eea', '#fd9644']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: commonLegend,
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${fmt(context.raw)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (document.getElementById('budgetComparisonChart')) {
+        new Chart(document.getElementById('budgetComparisonChart'), {
+            type: 'bar',
+            data: {
+                labels: budgetLabels,
+                datasets: [{
+                    label: LABEL_BUDGET,
+                    data: budgetLimitValues,
+                    backgroundColor: 'rgba(75,123,236,0.75)'
+                }, {
+                    label: LABEL_SPENT,
+                    data: budgetSpentValues,
+                    backgroundColor: 'rgba(255,107,129,0.75)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: commonLegend,
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${fmt(context.raw)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: chartTextColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: chartTextColor,
+                            callback: function(value) {
+                                return fmt(value);
+                            }
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (document.getElementById('walletDistributionChart')) {
+        new Chart(document.getElementById('walletDistributionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: accountLabels,
+                datasets: [{
+                    data: accountValues,
+                    backgroundColor: ['#20bf6b', '#4b7bec', '#a55eea', '#f39c12', '#ff6b81']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: commonLegend,
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${fmt(context.raw)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

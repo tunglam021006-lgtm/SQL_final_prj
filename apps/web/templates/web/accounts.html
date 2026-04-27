@@ -1,0 +1,246 @@
+{% extends 'web/base.html' %} {% block content %}
+<style>
+    .account-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+        background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .account-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    }
+    
+    .border-bank {
+        border-left: 5px solid #22c55e !important;
+    }
+    
+    .border-cash {
+        border-left: 5px solid #3b82f6 !important;
+    }
+    
+    .border-ewallet {
+        border-left: 5px solid #06b6d4 !important;
+    }
+    
+    .account-balance {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #60a5fa;
+    }
+    
+    .muted-small {
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 0.92rem;
+    }
+    
+    .account-empty {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    
+    .modal-content {
+        background: #2d1743;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">💰 {{ T.accounts_title }}</h1>
+        <p class="page-subtitle">{{ T.accounts_subtitle }}</p>
+    </div>
+
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+        <i class="bi bi-plus-circle"></i>
+        {% if LANG_CODE == 'vi' %}
+            Thêm ví
+        {% else %}
+            Add Wallet
+        {% endif %}
+    </button>
+</div>
+
+<div class="row">
+    {% if accounts %} {% for acc in accounts %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card h-100 shadow-sm
+                    {% if acc.type == 'bank' %}border-bank
+                    {% elif acc.type == 'e-wallet' %}border-ewallet
+                    {% else %}border-cash{% endif %}
+                    account-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="card-title fw-bold mb-1">{{ acc.name }}</h5>
+                        <span class="badge bg-secondary">
+                                    {% if acc.type == 'cash' %}
+                                        {% if LANG_CODE == 'vi' %}Tiền mặt{% else %}Cash{% endif %}
+                                    {% elif acc.type == 'bank' %}
+                                        {% if LANG_CODE == 'vi' %}Tài khoản ngân hàng{% else %}Bank Account{% endif %}
+                                    {% else %}
+                                        {% if LANG_CODE == 'vi' %}Ví điện tử{% else %}E-Wallet{% endif %}
+                                    {% endif %}
+                                </span>
+                    </div>
+
+                    <div class="text-end">
+                        <div class="account-balance">
+                            {{ acc.current_balance|floatformat:0 }} {{ acc.currency }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2 muted-small">
+                    <strong>
+                                {% if LANG_CODE == 'vi' %}
+                                    Số dư ban đầu:
+                                {% else %}
+                                    Initial balance:
+                                {% endif %}
+                            </strong> {{ acc.initial_balance|floatformat:0 }} {{ acc.currency }}
+                </div>
+
+                <div class="mb-3 muted-small">
+                    <strong>
+                                {% if LANG_CODE == 'vi' %}
+                                    Ngân hàng / Nhà cung cấp:
+                                {% else %}
+                                    Bank / Provider:
+                                {% endif %}
+                            </strong> {% if acc.bank_name %} {{ acc.bank_name }} {% else %} - {% endif %}
+                </div>
+
+                <div class="text-end border-top pt-3">
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="account_id" value="{{ acc.id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == " vi " %}Xóa ví này? Các giao dịch liên quan có thể bị ảnh hưởng.{% else %}Delete this wallet? Related transactions may be affected.{% endif %}')">
+                                    {% if LANG_CODE == 'vi' %}
+                                        Xóa
+                                    {% else %}
+                                        Delete
+                                    {% endif %}
+                                </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="col-12">
+        <div class="alert account-empty text-center">
+            {% if LANG_CODE == 'vi' %} Chưa có ví nào. Hãy thêm ví đầu tiên của bạn. {% else %} No wallets found. Please add your first wallet. {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="addAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if LANG_CODE == 'vi' %} Thêm ví mới {% else %} Add New Wallet {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Tên ví
+                            {% else %}
+                                Wallet Name
+                            {% endif %}
+                        </label>
+                        <input type="text" class="form-control" name="name" required placeholder="{% if LANG_CODE == 'vi' %}VD: Tiền mặt, MB Bank, Momo{% else %}e.g. Cash, MB Bank, Momo{% endif %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Loại ví
+                            {% else %}
+                                Type
+                            {% endif %}
+                        </label>
+                        <select class="form-select" name="type" id="account-type-select">
+                            {% for value, label in account_types %}
+                                <option value="{{ value }}">
+                                    {% if value == 'cash' %}
+                                        {% if LANG_CODE == 'vi' %}Tiền mặt{% else %}Cash{% endif %}
+                                    {% elif value == 'bank' %}
+                                        {% if LANG_CODE == 'vi' %}Tài khoản ngân hàng{% else %}Bank Account{% endif %}
+                                    {% elif value == 'e-wallet' %}
+                                        {% if LANG_CODE == 'vi' %}Ví điện tử{% else %}E-Wallet{% endif %}
+                                    {% else %}
+                                        {{ label }}
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Tên ngân hàng / nhà cung cấp
+                            {% else %}
+                                Bank / Provider Name
+                            {% endif %}
+                        </label>
+                        <input type="text" class="form-control" name="bank_name" placeholder="{% if LANG_CODE == 'vi' %}VD: Vietcombank, Momo{% else %}e.g. Vietcombank, Momo{% endif %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Loại tiền
+                            {% else %}
+                                Currency
+                            {% endif %}
+                        </label>
+                        <input type="text" class="form-control" name="currency" value="VND">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Số dư ban đầu
+                            {% else %}
+                                Initial Balance
+                            {% endif %}
+                        </label>
+                        <input type="number" class="form-control" name="initial_balance" value="0" min="0" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        {% if LANG_CODE == 'vi' %}
+                            Lưu ví
+                        {% else %}
+                            Save Wallet
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}{% endblock %}

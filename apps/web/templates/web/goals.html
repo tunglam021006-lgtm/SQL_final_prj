@@ -1,0 +1,198 @@
+{% extends 'web/base.html' %} {% load humanize %} {% block content %}
+<style>
+    .goal-card {
+        background: rgba(255, 255, 255, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .goal-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    }
+    
+    .goal-empty {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    
+    .goal-meta {
+        color: rgba(255, 255, 255, 0.76);
+    }
+    
+    .modal-content {
+        background: #2d1743;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center pt-2 pb-2 mb-4 border-bottom">
+    <div>
+        <h1 class="page-title">🎯 {{ T.goals_title }}</h1>
+        <p class="page-subtitle">{{ T.goals_subtitle }}</p>
+    </div>
+
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#goalModal">
+        + {{ T.add_goal }}
+    </button>
+</div>
+
+<div class="row">
+    {% if goals %} {% for goal in goals %}
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100 goal-card">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">{{ goal.name }}</h5>
+
+                {% if goal.is_completed %}
+                <span class="badge bg-success">{{ T.completed }}</span> {% else %}
+                <span class="badge bg-info text-dark">{{ goal.progress_percent }}%</span> {% endif %}
+            </div>
+
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ T.current }}</span>
+                    <span class="fw-bold">{{ goal.current_amount|floatformat:0|intcomma }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ T.target }}</span>
+                    <span class="fw-bold">{{ goal.target_amount|floatformat:0|intcomma }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>{{ T.remaining_plain }}</span>
+                    <span class="fw-bold">{{ goal.remaining_amount|floatformat:0|intcomma }}</span>
+                </div>
+
+                <div class="progress mb-3" style="height: 12px;">
+                    <div class="progress-bar bg-success" style="width: {{ goal.progress_percent }}%;"></div>
+                </div>
+
+                {% if goal.deadline %}
+                <p class="mb-2 goal-meta">{{ T.deadline }}: {{ goal.deadline|date:"d/m/Y" }}</p>
+                {% endif %} {% if goal.notes %}
+                <p class="mb-3 goal-meta">{{ goal.notes }}</p>
+                {% endif %}
+
+                <form method="post" class="row g-2 mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_progress">
+                    <input type="hidden" name="goal_id" value="{{ goal.id }}">
+
+                    <div class="col-8">
+                        <input type="number" name="add_amount" class="form-control" placeholder="{% if LANG_CODE == 'vi' %}Thêm số tiền{% else %}Add amount{% endif %}" min="1" required>
+                    </div>
+
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                                    {% if LANG_CODE == 'vi' %}
+                                        Cập nhật
+                                    {% else %}
+                                        Update
+                                    {% endif %}
+                                </button>
+                    </div>
+                </form>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                {% if LANG_CODE == 'vi' %}
+                                    Xóa
+                                {% else %}
+                                    Delete
+                                {% endif %}
+                            </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center py-5 goal-empty">
+                <h5 class="mb-2">{{ T.no_goals_yet }}</h5>
+                <p class="empty-state-text mb-3">{{ T.goals_subtitle }}</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#goalModal">
+                        {{ T.create_first_goal }}
+                    </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="goalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">{{ T.add_goal }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Tên mục tiêu
+                            {% else %}
+                                Goal Name
+                            {% endif %}
+                        </label>
+                        <input type="text" name="name" class="form-control" placeholder="{% if LANG_CODE == 'vi' %}Quỹ khẩn cấp{% else %}Emergency Fund{% endif %}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Số tiền mục tiêu
+                            {% else %}
+                                Target Amount
+                            {% endif %}
+                        </label>
+                        <input type="number" name="target_amount" class="form-control" min="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if LANG_CODE == 'vi' %}
+                                Số tiền hiện tại
+                            {% else %}
+                                Current Amount
+                            {% endif %}
+                        </label>
+                        <input type="number" name="current_amount" class="form-control" min="0" value="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ T.deadline }}</label>
+                        <input type="date" name="deadline" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ T.notes }}</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="{% if LANG_CODE == 'vi' %}Ghi chú tùy chọn{% else %}Optional notes{% endif %}"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">{{ T.cancel }}</button>
+                    <button type="submit" class="btn btn-primary">{{ T.save_goal }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
