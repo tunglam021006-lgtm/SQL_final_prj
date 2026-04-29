@@ -137,7 +137,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `finance_recurringtransaction` WRITE;
 /*!40000 ALTER TABLE `finance_recurringtransaction` DISABLE KEYS */;
-INSERT INTO `finance_recurringtransaction` VALUES (1,'Lương hàng tháng','income',10000000.00,'monthly','2026-06-24',0,'2026-04-24 13:22:49.252922','',1,'2026-04-24 13:13:34.012077','2026-04-24 13:22:49.252922',4,NULL,4,2);
+INSERT INTO `finance_recurringtransaction` VALUES (1,'Lương hàng tháng','income',10000000,'monthly','2026-06-24',0,'2026-04-24 13:22:49.252922','',1,'2026-04-24 13:13:34.012077','2026-04-24 13:22:49.252922',4,NULL,4,2);
 /*!40000 ALTER TABLE `finance_recurringtransaction` ENABLE KEYS */;
 UNLOCK TABLES;
 

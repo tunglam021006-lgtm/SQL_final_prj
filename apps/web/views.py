@@ -320,6 +320,98 @@ def create_transaction_and_update_balances(
     return tx
 
 
+def get_category_tree_ids(category):
+    """Return the selected category id plus all active descendant ids.
+
+    A budget may be created for a parent category such as Food, while
+    transactions may be saved under child categories such as Breakfast or Coffee.
+    Therefore, budget spending must include the parent category and all children.
+    """
+    if not category:
+        return []
+
+    category_ids = [category.id]
+    children = Category.objects.filter(
+        parent=category,
+        user=category.user,
+        is_active=True,
+    ).only("id", "user")
+
+    for child in children:
+        category_ids.extend(get_category_tree_ids(child))
+
+    return category_ids
+
+
+def is_transaction_in_budget_month(tx, budget):
+    """Check transaction month in Python instead of relying on MySQL date extraction.
+
+    This avoids cases where occurred_at__year / occurred_at__month returns the
+    wrong result because of timezone conversion. It also keeps Budget page and
+    Dashboard calculations consistent.
+    """
+    occurred_at = tx.occurred_at
+
+    if timezone.is_naive(occurred_at):
+        occurred_at = timezone.make_aware(
+            occurred_at,
+            timezone.get_current_timezone(),
+        )
+
+    local_dt = timezone.localtime(occurred_at)
+    return local_dt.year == budget.year and local_dt.month == budget.month
+
+
+def calculate_budget_row(user, budget, base_transactions=None):
+    category_ids = set(get_category_tree_ids(budget.category))
+
+    if not category_ids:
+        spent = Decimal("0")
+    else:
+        if base_transactions is None:
+            transactions = Transaction.objects.filter(
+                user=user,
+                type="expense",
+                category_id__in=category_ids,
+            ).select_related("category")
+        else:
+            transactions = base_transactions
+
+        spent = Decimal("0")
+        for tx in transactions:
+            if (
+                tx.type == "expense"
+                and tx.category_id in category_ids
+                and is_transaction_in_budget_month(tx, budget)
+            ):
+                spent += tx.amount or Decimal("0")
+
+    usage_percent = Decimal("0.00")
+    if budget.amount and budget.amount > 0:
+        usage_percent = (
+            (spent / budget.amount) * Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+    remaining = budget.amount - spent
+
+    status = "safe"
+    if usage_percent >= Decimal("100"):
+        status = "over"
+    elif usage_percent >= budget.alert_threshold:
+        status = "warning"
+
+    return {
+        "budget": budget,
+        "category": budget.category.name if budget.category else "Uncategorized",
+        "budget_amount": budget.amount,
+        "spent": spent,
+        "remaining": remaining,
+        "usage_percent": usage_percent,
+        "usage_percent_capped": min(usage_percent, Decimal("100.00")),
+        "status": status,
+    }
+
+
 def get_user_category_names(user, tx_type):
     return list(
         Category.objects.filter(
@@ -692,36 +784,10 @@ def dashboard_view(request):
         year=month_start.year,
     ).select_related("category")
 
-    budget_rows = []
-    for budget in budgets:
-        spent = month_transactions.filter(
-            type="expense",
-            category=budget.category,
-        ).aggregate(total=Coalesce(Sum("amount"), Decimal("0")))["total"]
-
-        usage_percent = Decimal("0")
-        if budget.amount and budget.amount > 0:
-            usage_percent = (spent / budget.amount) * 100
-
-        remaining = budget.amount - spent
-
-        status = "safe"
-        if usage_percent >= 100:
-            status = "over"
-        elif usage_percent >= budget.alert_threshold:
-            status = "warning"
-
-        budget_rows.append(
-            {
-                "budget": budget,
-                "category": budget.category.name,
-                "budget_amount": budget.amount,
-                "spent": spent,
-                "remaining": remaining,
-                "usage_percent": round(usage_percent, 2),
-                "status": status,
-            }
-        )
+    budget_rows = [
+        calculate_budget_row(user, budget, month_transactions)
+        for budget in budgets
+    ]
 
     budget_rows = sorted(budget_rows, key=lambda x: x["usage_percent"], reverse=True)
     warning_budget_count = sum(1 for row in budget_rows if row["status"] == "warning")
@@ -917,7 +983,11 @@ def categories_view(request):
             parent = None
             if parent_id:
                 try:
-                    parent = Category.objects.get(id=parent_id, user=request.user, is_active=True)
+                    parent = Category.objects.get(
+                        id=parent_id,
+                        user=request.user,
+                        is_active=True,
+                    )
                 except Category.DoesNotExist:
                     messages.error(request, "Parent category not found.")
                     return redirect("categories")
@@ -973,19 +1043,36 @@ def categories_view(request):
     month = now.month
     year = now.year
 
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    if month_start.month == 12:
+        next_month_start = month_start.replace(year=month_start.year + 1, month=1)
+    else:
+        next_month_start = month_start.replace(month=month_start.month + 1)
+
+    month_expenses = Transaction.objects.filter(
+        user=request.user,
+        type="expense",
+        occurred_at__gte=month_start,
+        occurred_at__lt=next_month_start,
+    )
+
+    def get_category_spent(category):
+        category_ids = get_category_tree_ids(category)
+        if not category_ids:
+            return Decimal("0")
+
+        return (
+            month_expenses.filter(category_id__in=category_ids)
+            .aggregate(total=Coalesce(Sum("amount"), Decimal("0")))["total"]
+            or Decimal("0")
+        )
+
     def build_rows(categories_queryset):
         parents = categories_queryset.filter(parent__isnull=True)
         rows = []
 
         for parent in parents:
-            spent = Transaction.objects.filter(
-                user=request.user,
-                type="expense",
-                category=parent,
-                occurred_at__year=year,
-                occurred_at__month=month,
-            ).aggregate(total=Coalesce(Sum("amount"), Decimal(0)))["total"]
-
             budget = Budget.objects.filter(
                 user=request.user,
                 category=parent,
@@ -997,21 +1084,13 @@ def categories_view(request):
                 {
                     "category": parent,
                     "level": 0,
-                    "spent": spent,
+                    "spent": get_category_spent(parent),
                     "budget": budget,
                 }
             )
 
             children = categories_queryset.filter(parent=parent).order_by("name")
             for child in children:
-                spent_child = Transaction.objects.filter(
-                    user=request.user,
-                    type="expense",
-                    category=child,
-                    occurred_at__year=year,
-                    occurred_at__month=month,
-                ).aggregate(total=Coalesce(Sum("amount"), Decimal(0)))["total"]
-
                 budget_child = Budget.objects.filter(
                     user=request.user,
                     category=child,
@@ -1023,7 +1102,7 @@ def categories_view(request):
                     {
                         "category": child,
                         "level": 1,
-                        "spent": spent_child,
+                        "spent": get_category_spent(child),
                         "budget": budget_child,
                     }
                 )
@@ -1044,8 +1123,6 @@ def categories_view(request):
             "current_year": year,
         },
     )
-
-
 @login_required
 def budgets_view(request):
     now = timezone.localtime()
@@ -1094,8 +1171,12 @@ def budgets_view(request):
 
         if action == "delete":
             budget_id = request.POST.get("budget_id")
+
             try:
-                budget = Budget.objects.get(id=budget_id, user=request.user)
+                budget = Budget.objects.get(
+                    id=budget_id,
+                    user=request.user,
+                )
                 budget.delete()
                 messages.success(request, tr(request, "delete_success_budget"))
             except Exception as e:
@@ -1109,43 +1190,29 @@ def budgets_view(request):
         .order_by("-year", "-month", "category__name")
     )
 
-    budget_rows = []
-    for budget in budgets:
-        spent = Transaction.objects.filter(
+    # Preload expense transactions once, then calculate each budget row in Python.
+    # This is more reliable than filtering by occurred_at__month in MySQL,
+    # especially when timezone conversion is involved.
+    expense_transactions = list(
+        Transaction.objects.filter(
             user=request.user,
             type="expense",
-            category=budget.category,
-            occurred_at__year=budget.year,
-            occurred_at__month=budget.month,
-        ).aggregate(total=Coalesce(Sum("amount"), Decimal(0)))["total"]
+        ).select_related("category")
+    )
 
-        usage_percent = Decimal(0)
-        if budget.amount and budget.amount > 0:
-            usage_percent = (spent / budget.amount) * 100
+    budget_rows = [
+        calculate_budget_row(request.user, budget, expense_transactions)
+        for budget in budgets
+    ]
 
-        remaining = budget.amount - spent
-
-        status = "safe"
-        if usage_percent >= 100:
-            status = "over"
-        elif usage_percent >= budget.alert_threshold:
-            status = "warning"
-
-        budget_rows.append(
-            {
-                "budget": budget,
-                "spent": spent,
-                "remaining": remaining,
-                "usage_percent": round(usage_percent, 2),
-                "status": status,
-            }
+    expense_categories = (
+        Category.objects.filter(
+            user=request.user,
+            is_active=True,
+            type="expense",
         )
-
-    expense_categories = Category.objects.filter(
-        user=request.user,
-        is_active=True,
-        type="expense",
-    ).order_by("name")
+        .order_by("name")
+    )
 
     return render(
         request,
@@ -1157,7 +1224,6 @@ def budgets_view(request):
             "expense_categories": expense_categories,
         },
     )
-
 
 @login_required
 def goals_view(request):
@@ -1270,7 +1336,14 @@ def recurring_view(request):
             amount_raw = request.POST.get("amount", "").strip()
             account_id = request.POST.get("account", "").strip()
             destination_account_id = request.POST.get("destination_account", "").strip()
-            category_id = request.POST.get("category", "").strip()
+            income_category_id = request.POST.get("income_category", "").strip()
+            expense_category_id = request.POST.get("expense_category", "").strip()
+            fallback_category_id = request.POST.get("category", "").strip()
+            category_id = ""
+            if tx_type == "income":
+                category_id = income_category_id or fallback_category_id
+            elif tx_type == "expense":
+                category_id = expense_category_id or fallback_category_id
             frequency = request.POST.get("frequency", "monthly").strip()
             next_due_date_raw = request.POST.get("next_due_date", "").strip()
             auto_create = request.POST.get("auto_create") == "on"

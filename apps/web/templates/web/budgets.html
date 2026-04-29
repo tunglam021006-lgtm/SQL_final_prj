@@ -90,23 +90,23 @@
                 </div>
 
                 <div class="mb-2">
-                    <strong>{% if LANG_CODE == 'vi' %}Ngưỡng cảnh báo:{% else %}Alert threshold:{% endif %}</strong> {{ row.budget.alert_threshold }}%
+                    <strong>{% if LANG_CODE == 'vi' %}Ngưỡng cảnh báo:{% else %}Alert threshold:{% endif %}</strong> {{ row.budget.alert_threshold|floatformat:2 }}%
                 </div>
 
                 <div class="progress my-3" style="height: 10px;">
-                    <div class="progress-bar {% if row.status == 'over' %}bg-danger{% elif row.status == 'warning' %}bg-warning{% else %}bg-success{% endif %}" style="width: {% if row.usage_percent > 100 %}100{% else %}{{ row.usage_percent }}{% endif %}%;">
+                    <div class="progress-bar {% if row.status == 'over' %}bg-danger{% elif row.status == 'warning' %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ row.usage_percent_capped|floatformat:2 }}%;">
                     </div>
                 </div>
 
                 <div class="small text-muted mb-3">
-                    {% if LANG_CODE == 'vi' %} Mức sử dụng: {{ row.usage_percent }}% {% else %} Usage: {{ row.usage_percent }}% {% endif %}
+                    {% if LANG_CODE == 'vi' %} Mức sử dụng: {{ row.usage_percent|floatformat:2 }}% {% else %} Usage: {{ row.usage_percent|floatformat:2 }}% {% endif %}
                 </div>
 
                 <form method="post" class="d-grid">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="budget_id" value="{{ row.budget.id }}">
-                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == " vi " %}Xóa ngân sách này?{% else %}Delete this budget?{% endif %}')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == 'vi' %}Xóa ngân sách này?{% else %}Delete this budget?{% endif %}')">
                                 {% if LANG_CODE == 'vi' %}
                                     Xóa ngân sách
                                 {% else %}
@@ -164,7 +164,7 @@
                                 Limit Amount (VND)
                             {% endif %}
                         </label>
-                        <input type="number" class="form-control" name="amount" min="0" required>
+                        <input type="number" class="form-control" name="amount" min="1" step="1" required>
                     </div>
 
                     <div class="mb-3">

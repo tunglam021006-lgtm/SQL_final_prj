@@ -265,7 +265,7 @@ CREATE TABLE `finance_recurringtransaction` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `title` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
   `type` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `amount` decimal(14,2) NOT NULL,
+  `amount` decimal(14,0) NOT NULL,
   `frequency` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
   `next_due_date` date NOT NULL,
   `auto_create` tinyint(1) NOT NULL,

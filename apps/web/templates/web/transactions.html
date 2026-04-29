@@ -186,7 +186,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="transaction_id" value="{{ tx.id }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == " vi " %}Xóa giao dịch này? Số dư tài khoản sẽ được cập nhật lại.{% else %}Delete this transaction? Account balances will be updated.{% endif %}')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% if LANG_CODE == 'vi' %}Xóa giao dịch này? Số dư tài khoản sẽ được cập nhật lại.{% else %}Delete this transaction? Account balances will be updated.{% endif %}')">
                                         {% if LANG_CODE == 'vi' %}
                                             Xóa
                                         {% else %}

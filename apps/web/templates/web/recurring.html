@@ -156,7 +156,7 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ T.amount }}</label>
-                            <input type="number" name="amount" class="form-control" min="1" required>
+                            <input type="number" name="amount" class="form-control" min="1" step="1" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -178,7 +178,7 @@
 
                         <div class="col-md-6 mb-3" id="destination-wrapper" style="display:none;">
                             <label class="form-label">{{ T.destination }}</label>
-                            <select name="destination_account" class="form-select">
+                            <select name="destination_account" id="destination-account-select" class="form-select">
                                 <option value="">
                                     {% if LANG_CODE == 'vi' %}
                                         -- Tùy chọn --
@@ -200,12 +200,12 @@
                                     Expense Category
                                 {% endif %}
                             </label>
-                            <select name="category" class="form-select">
+                            <select name="expense_category" id="expense-category-select" class="form-select" disabled>
                                 <option value="">
                                     {% if LANG_CODE == 'vi' %}
-                                        -- Tùy chọn --
+                                        -- Chọn danh mục chi tiêu --
                                     {% else %}
-                                        -- Optional --
+                                        -- Select expense category --
                                     {% endif %}
                                 </option>
                                 {% for category in expense_categories %}
@@ -222,7 +222,7 @@
                                     Income Category
                                 {% endif %}
                             </label>
-                            <select name="category" class="form-select">
+                            <select name="income_category" id="income-category-select" class="form-select">
                                 <option value="">
                                     {% if LANG_CODE == 'vi' %}
                                         -- Tùy chọn --
@@ -276,19 +276,26 @@
         const destinationWrapper = document.getElementById("destination-wrapper");
         const expenseCategoryWrapper = document.getElementById("expense-category-wrapper");
         const incomeCategoryWrapper = document.getElementById("income-category-wrapper");
+        const destinationSelect = document.getElementById("destination-account-select");
+        const expenseCategorySelect = document.getElementById("expense-category-select");
+        const incomeCategorySelect = document.getElementById("income-category-select");
 
-        if (type === "transfer") {
-            destinationWrapper.style.display = "block";
-            expenseCategoryWrapper.style.display = "none";
-            incomeCategoryWrapper.style.display = "none";
-        } else if (type === "expense") {
-            destinationWrapper.style.display = "none";
-            expenseCategoryWrapper.style.display = "block";
-            incomeCategoryWrapper.style.display = "none";
-        } else {
-            destinationWrapper.style.display = "none";
-            expenseCategoryWrapper.style.display = "none";
-            incomeCategoryWrapper.style.display = "block";
+        destinationWrapper.style.display = type === "transfer" ? "block" : "none";
+        expenseCategoryWrapper.style.display = type === "expense" ? "block" : "none";
+        incomeCategoryWrapper.style.display = type === "income" ? "block" : "none";
+
+        destinationSelect.disabled = type !== "transfer";
+        expenseCategorySelect.disabled = type !== "expense";
+        incomeCategorySelect.disabled = type !== "income";
+
+        if (type !== "transfer") {
+            destinationSelect.value = "";
+        }
+        if (type !== "expense") {
+            expenseCategorySelect.value = "";
+        }
+        if (type !== "income") {
+            incomeCategorySelect.value = "";
         }
     }
 
