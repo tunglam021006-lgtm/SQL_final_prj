@@ -500,6 +500,5 @@ Course project submission
 
 ### ✨ Thanks for visiting this project!
 
-💡 If you upload this to GitHub, this decorated version will look much nicer and easier to read.
 
 </div>
