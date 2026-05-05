@@ -199,12 +199,13 @@ CREATE TABLE `finance_budget` (
   `month` smallint unsigned NOT NULL,
   `year` int unsigned NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `finance_budget_user_category_period_uniq` (`user_id`,`category_id`,`period`,`month`,`year`),
   KEY `finance_budget_category_id_3ead498a_fk_finance_category_id` (`category_id`),
   KEY `finance_budget_user_id_5b42ea65` (`user_id`),
   CONSTRAINT `finance_budget_category_id_3ead498a_fk_finance_category_id` FOREIGN KEY (`category_id`) REFERENCES `finance_category` (`id`),
   CONSTRAINT `finance_budget_user_id_5b42ea65_fk_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users_user` (`id`),
-  CONSTRAINT `finance_budget_chk_1` CHECK ((`month` >= 0)),
-  CONSTRAINT `finance_budget_chk_2` CHECK ((`year` >= 0))
+  CONSTRAINT `finance_budget_chk_1` CHECK ((`month` between 1 and 12)),
+  CONSTRAINT `finance_budget_chk_2` CHECK ((`year` >= 2000))
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
