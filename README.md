@@ -1,291 +1,383 @@
-# 💸 Personal Finance Management Web Application
-
 <div align="center">
 
-![Django](https://img.shields.io/badge/Backend-Django-0C4B33?style=for-the-badge&logo=django&logoColor=white)
-![MySQL](https://img.shields.io/badge/Database-MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Frontend-Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
-![Language](https://img.shields.io/badge/Language-English%20%7C%20Vietnamese-ff69b4?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Course%20Project-success?style=for-the-badge)
+# 💸 Personal Finance Management System
 
-**A bilingual web-based personal finance management system built with Django, MySQL, and Bootstrap.**
+### Project 13 – Introduction to Database System
 
-✨ Track your money • 📊 Understand your spending • 🎯 Reach your goals
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-4.2.30-092E20?style=for-the-badge&logo=django&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-UI-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Academic%20Demo-success?style=for-the-badge)
+
+**Student:** Tran Tung Lam  
+**Student ID:** 11245891  
+**Class:** DSEB 66B  
+**GitHub Repository:** https://github.com/tunglam021006-lgtm/SQL_final_prj  
+**YouTube Presentation:** https://youtu.be/I92ByVNMSEs
 
 </div>
 
 ---
 
-## 🌟 Project Overview
+## 📌 Table of Contents
 
-This project is a **personal finance management web application** developed for academic purposes.
-
-It helps users:
-
-- 💼 manage multiple wallets and accounts  
-- 💸 record income, expenses, and transfers  
-- 🗂️ organize transactions using categories  
-- 📉 track budgets by category  
-- 🎯 create and monitor financial goals  
-- 🔁 manage recurring transactions  
-- 📊 view useful analytics on a dashboard  
-- 🌐 switch between **English** and **Vietnamese**
-
-> **Goal:** make personal finance tracking more practical, clear, and user-friendly through a clean dashboard-based interface.
-
----
-
-## 🧩 Key Features
-
-### 📊 1. Dashboard
-- monthly income, expense, and net savings overview
-- total wallet balance summary
-- recent transactions
-- budget alerts
-- top spending categories
-- goals overview
-- recurring transactions due soon
-
-### 👛 2. Wallet / Account Management
-- support for **cash wallets**
-- support for **bank accounts**
-- support for **e-wallets**
-- current balance tracking
-- initial balance storage
-
-### 🧾 3. Transaction Management
-- add income transactions
-- add expense transactions
-- add transfer transactions
-- automatic wallet balance updates
-- transaction filtering and sorting
-- recent history display
-
-### 🏷️ 4. Category Management
-- create income categories
-- create expense categories
-- support parent-child category structure
-
-### 📌 5. Budget Management
-- assign budgets by category
-- monitor actual spending
-- budget usage percentage
-- alert threshold support
-
-### 🎯 6. Financial Goals
-- create savings goals
-- update goal progress
-- track target amount, current amount, and remaining amount
-- completion status
-
-### 🔁 7. Recurring Transactions
-- repeating income
-- repeating expenses
-- repeating transfers
-- next due date tracking
-- manual apply action for recurring items
-
-### 🌐 8. Bilingual Interface
-- English and Vietnamese language toggle
-- more accessible and user-friendly interface
+- [1. Project Overview](#1-project-overview)
+- [2. Main Features](#2-main-features)
+- [3. Technology Stack](#3-technology-stack)
+- [4. Project Structure](#4-project-structure)
+- [5. Database Design Summary](#5-database-design-summary)
+- [6. SQL Deliverables](#6-sql-deliverables)
+- [7. SQL Query Highlights](#7-sql-query-highlights)
+- [8. Local Setup Instructions](#8-local-setup-instructions)
+- [9. Useful Development Commands](#9-useful-development-commands)
+- [10. Demo Data Summary](#10-demo-data-summary)
+- [11. Testing and Validation](#11-testing-and-validation)
+- [12. Known Limitations](#12-known-limitations)
+- [13. Future Improvements](#13-future-improvements)
+- [14. Submission Links](#14-submission-links)
+- [15. References](#15-references)
 
 ---
 
-## 🛠️ Technology Stack
+## 1. Project Overview
+
+**Personal Finance Management System** is a web-based application developed for **Project 13 – Introduction to Database System**. The system helps users manage personal financial activities, including:
+
+- income,
+- expenses,
+- wallets/accounts,
+- spending categories,
+- budgets,
+- financial goals,
+- recurring transactions,
+- financial reports and alerts.
+
+The project is built with **Python, Django, MySQL, Bootstrap, HTML, CSS, and JavaScript**. It demonstrates how relational database design, SQL scripting, and Python web development can work together in a complete personal finance application.
+
+> This system is designed for academic demonstration and local use. It does not connect to real banking APIs or process real payment transactions.
+
+---
+
+## 2. Main Features
+
+### 🔐 User and Authentication
+
+- User registration and login/logout.
+- User-specific financial data separation.
+- Each user can manage their own wallets, categories, transactions, budgets, goals, and recurring records.
+
+### 📊 Dashboard
+
+- Monthly financial overview.
+- Total income, total expense, net cash flow, wallet balance, transaction count, largest expense, category usage, and budget risk.
+- Cashflow trend chart.
+- Expense breakdown chart.
+- Wallet distribution chart.
+- Budget-versus-spent comparison and budget alerts.
+
+### 👛 Wallet / Account Management
+
+- Create and manage different account types:
+  - cash,
+  - bank account,
+  - e-wallet.
+- Track initial balance and current balance.
+- Link every transaction to a source wallet/account.
+
+### 🏷️ Category Management
+
+- Separate income and expense categories.
+- Parent-child category hierarchy.
+- Example: `Food` as a parent category with `Groceries`, `Restaurant`, `Coffee`, and `Breakfast` as subcategories.
+- Monthly spending by category.
+- Budget mapping by category.
+
+### 💳 Transaction Management
+
+- Create, view, filter, sort, and delete transactions.
+- Supports three transaction types:
+  - income,
+  - expense,
+  - transfer.
+- Automatic account balance updates when transactions are created or removed.
+
+### 🎯 Budget Management
+
+- Create monthly budgets by expense category.
+- Store budget amount and alert threshold.
+- Calculate spent amount, remaining amount, usage percentage, and budget status.
+
+| Status | Meaning |
+|---|---|
+| ✅ Safe | Spending is below the alert threshold. |
+| ⚠️ Warning | Spending reaches or exceeds the alert threshold. |
+| 🚨 Over | Spending exceeds the budget amount. |
+
+### 🏁 Financial Goals
+
+- Create saving goals.
+- Track target amount, current amount, deadline, and progress percentage.
+
+### 🔁 Recurring Transactions
+
+- Store repeated transactions such as salary, rent, subscriptions, gym membership, and savings transfers.
+- Support manual apply action to generate actual transactions.
+
+### 🌐 Bilingual Interface
+
+- English/Vietnamese language toggle.
+- Designed to improve usability for Vietnamese users while keeping an English interface for academic demonstration.
+
+---
+
+## 3. Technology Stack
 
 | Layer | Technology |
-|------|------------|
-| **Backend** | Django |
-| **Database** | MySQL |
-| **Frontend** | HTML, CSS, Bootstrap, JavaScript |
-| **ORM** | Django ORM |
+|---|---|
+| Backend | Python, Django |
+| Database | MySQL |
+| Frontend | HTML, CSS, Bootstrap, JavaScript |
+| ORM | Django ORM |
+| Charts/UI | JavaScript chart components and Bootstrap-based templates |
+| Version Control | Git, GitHub |
+| Database Design Tools | ERDPlus, MySQL Workbench |
 
 ---
 
-## 🧱 System Architecture
-
-```text
-User Interface
-    ↓
-Django Views / Templates
-    ↓
-Django ORM
-    ↓
-MySQL Database
-```
-
-### 🔄 Request Flow
-1. the user interacts with the web interface  
-2. Django receives and processes the request  
-3. Django ORM translates application logic into SQL queries  
-4. MySQL stores or returns the requested data  
-5. Django renders the updated result back to the browser  
-
----
-
-## 📁 Project Structure
+## 4. Project Structure
 
 ```text
 Project-13-Personal-Finance/
+│
 ├── apps/
-│   ├── finance/              # core finance models and admin
-│   ├── users/                # user model and authentication logic
-│   └── web/                  # views, templates, routes, UI logic
-├── config/                   # project settings, urls, UI texts
+│   ├── finance/                 # Finance models, migrations, seed command
+│   ├── users/                   # Custom user/authentication logic
+│   └── web/                     # Views, templates, dashboard, UI pages
+│
+├── config/                      # Django project settings and URL configuration
+│
 ├── database/
 │   ├── 01_create_database.sql
 │   ├── 02_schema.sql
+│   ├── 02b_schema_clean.sql
 │   ├── 03_sample_data.sql
-│   └── 04_queries.sql
+│   ├── 04_queries.sql
+│   ├── 05_advanced_objects.sql
+│   ├── 06_security_roles.sql
+│   └── README_SQL_FILES.md
+│
 ├── manage.py
 ├── requirements.txt
-└── README.md
+├── README.md
+├── .env.example
+└── .gitignore
 ```
 
 ---
 
-## ✅ Prerequisites
+## 5. Database Design Summary
 
-Before running the project, make sure the following are installed:
+The assignment specification requires the conceptual entities:
 
-- 🐍 **Python 3.11**
-- 🐬 **MySQL Server 8.x**
-- 📦 **pip**
-
-Optional but recommended:
-- 🧰 **MySQL Workbench**
-- 🌿 **Git**
-
----
-
-## 🚀 Installation Guide
-
-### 1. Clone or download the project
-
-```bash
-git clone <your-repository-url>
-cd Project-13-Personal-Finance
+```text
+Users
+Income
+Expenses
+ExpenseCategories
+BankAccounts
 ```
 
-If the project is submitted as a ZIP file, simply extract it and open a terminal inside the project folder.
+The implemented application extends this design into a more flexible Django/MySQL schema.
+
+| Table | Purpose |
+|---|---|
+| `users_user` | Stores application users and authentication-related user data. |
+| `finance_account` | Stores wallets, bank accounts, and e-wallets. |
+| `finance_category` | Stores income and expense categories, including parent-child hierarchy. |
+| `finance_transaction` | Stores income, expense, and transfer records in a unified transaction table. |
+| `finance_budget` | Stores category-based monthly budgets and alert thresholds. |
+| `finance_financialgoal` | Stores saving goals and progress. |
+| `finance_recurringtransaction` | Stores recurring income, expense, and transfer templates. |
+
+### Why a Unified Transaction Table?
+
+Instead of physically separating income and expenses into different tables, the application uses one table called `finance_transaction` with a `type` field.
+
+This design:
+
+- reduces repeated fields across income and expense records,
+- supports income, expense, and transfer in one structure,
+- makes financial reporting easier,
+- allows filtering by user, account, category, transaction type, and date.
+
+To remain compatible with the assignment requirement, the advanced SQL file also provides SQL views such as:
+
+```text
+Income
+Expenses
+ExpenseCategories
+BankAccounts
+```
+
+These views expose the normalized implementation in a structure closer to the assignment specification.
 
 ---
 
-### 2. Create a virtual environment
+## 6. SQL Deliverables
+
+The `database/` folder contains all SQL-related submission files.
+
+| File | Purpose |
+|---|---|
+| `01_create_database.sql` | Creates the MySQL database. |
+| `02_schema.sql` | Full implemented schema exported from the Django/MySQL database. |
+| `02b_schema_clean.sql` | Clean business-focused schema for SQL evaluation, excluding Django internal framework tables. |
+| `03_sample_data.sql` | Inserts representative sample data. |
+| `04_queries.sql` | Contains analytical SQL queries for financial reporting. |
+| `05_advanced_objects.sql` | Optional advanced SQL objects: indexes, views, stored procedures, user-defined functions, and triggers. |
+| `06_security_roles.sql` | Optional database security and administration script using MySQL roles and GRANT/REVOKE examples. |
+| `README_SQL_FILES.md` | Explains the purpose and safe usage of SQL files. |
+
+### ⚠️ Important Trigger Warning
+
+`05_advanced_objects.sql` contains optional trigger examples for automatic balance updates at the database layer.
+
+The Django application already updates account balances using Python application logic. Therefore, the trigger section should **not** be enabled together with the Django balance update logic unless the Python balance update logic is disabled. Otherwise, account balances may be updated twice.
+
+---
+
+## 7. SQL Query Highlights
+
+The improved `04_queries.sql` demonstrates stronger SQL usage, including:
+
+- user-specific filtering using `WHERE user_id = @target_user_id`,
+- monthly income, expense, and net cashflow reporting,
+- `CASE WHEN` logic for conditional aggregation,
+- `LEFT JOIN` and `COALESCE` for budget-versus-spent calculations,
+- Common Table Expressions (CTEs),
+- Recursive CTE for parent-child category hierarchy,
+- window functions such as `LAG()`, `SUM() OVER()`, and `RANK()`,
+- goal progress and recurring transaction monitoring.
+
+---
+
+## 8. Local Setup Instructions
+
+### Step 1: Clone the Repository
 
 ```bash
+git clone https://github.com/tunglam021006-lgtm/SQL_final_prj.git
+cd SQL_final_prj
+```
+
+If your local folder name is different, open the folder that contains `manage.py`.
+
+### Step 2: Create and Activate Virtual Environment
+
+Windows PowerShell:
+
+```powershell
 python -m venv venv
+.\venv\Scripts\activate
 ```
 
-Activate it:
+macOS/Linux:
 
-#### Windows
 ```bash
-venv\Scripts\activate
-```
-
-#### macOS / Linux
-```bash
+python3 -m venv venv
 source venv/bin/activate
 ```
 
----
-
-### 3. Install dependencies
+### Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-If `requirements.txt` is missing or incomplete, install the main packages manually:
+### Step 4: Configure Environment Variables
+
+Copy `.env.example` to `.env`.
+
+Windows PowerShell:
+
+```powershell
+copy .env.example .env
+```
+
+macOS/Linux:
 
 ```bash
-pip install django mysqlclient djangorestframework
+cp .env.example .env
 ```
 
----
+Then edit `.env` with your local MySQL settings:
 
-## 🗄️ Database Setup
+```env
+SECRET_KEY=django-insecure-change-this-for-local-dev
+DEBUG=True
 
-The project uses **MySQL**.
+DB_NAME=personal_finance_db
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_HOST=127.0.0.1
+DB_PORT=3306
+```
 
-### Step 1: Create the database
-Run:
+> Do not upload your real `.env` file to GitHub.
+
+### Step 5: Create MySQL Database
+
+Log in to MySQL and create the database:
 
 ```sql
-database/01_create_database.sql
+CREATE DATABASE personal_finance_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-This creates the database:
-
-```sql
-personal_finance_db
-```
-
-### Step 2: Import the schema
-Run:
-
-```sql
-database/02_schema.sql
-```
-
-This creates all required tables.
-
-### Step 3: Import the sample data
-Run:
-
-```sql
-database/03_sample_data.sql
-```
-
-This inserts sample/demo records for testing.
-
----
-
-## ▶️ Running the Application
-
-### 1. Configure database settings
-
-Open:
-
-```text
-config/settings.py
-```
-
-Find the `DATABASES` section and update it to match the MySQL setup on your machine.
-
-Example:
-
-```python
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "personal_finance_db",
-        "USER": "root",
-        "PASSWORD": "your_mysql_password",
-        "HOST": "127.0.0.1",
-        "PORT": "3306",
-    }
-}
-```
-
----
-
-### 2. Apply migrations if needed
+Alternatively, run:
 
 ```bash
+mysql -u root -p < database/01_create_database.sql
+```
+
+### Step 6: Run Migrations
+
+```bash
+python manage.py makemigrations
 python manage.py migrate
 ```
 
----
+### Step 7: Create a Superuser Optional
 
-### 3. Run the development server
+```bash
+python manage.py createsuperuser
+```
+
+### Step 8: Seed May 2026 Demo Data Optional
+
+The project includes a Django management command that creates diverse demo data for May 2026.
+
+```bash
+python manage.py seed_may_demo --reset
+```
+
+This command creates or updates sample wallets, categories, budgets, goals, recurring transactions, and **42 transactions** for the demo user.
+
+Default demo username:
+
+```text
+taikhoantest
+```
+
+If the user does not exist, the seed command creates it for local demonstration. Change any demo password before using the system outside local testing.
+
+### Step 9: Run the Development Server
 
 ```bash
 python manage.py runserver
 ```
 
-Open the browser and go to:
+Open the website:
 
 ```text
 http://127.0.0.1:8000/
@@ -293,212 +385,100 @@ http://127.0.0.1:8000/
 
 ---
 
-## 🧪 Demo Data
+## 9. Useful Development Commands
 
-If the sample data is imported successfully, the application can be tested immediately.
-
-You may also reset a demo password if needed:
-
-```bash
-python manage.py changepassword taikhoantest
-```
-
-Or create a new superuser:
-
-```bash
-python manage.py createsuperuser
-```
+| Task | Command |
+|---|---|
+| Check Django project | `python manage.py check` |
+| Apply migrations | `python manage.py migrate` |
+| Run server | `python manage.py runserver` |
+| Seed demo data | `python manage.py seed_may_demo --reset` |
+| Run SQL queries manually | `mysql -u root -p personal_finance_db < database/04_queries.sql` |
 
 ---
 
-## 🧠 SQL Files Included
+## 10. Demo Data Summary
 
-### `01_create_database.sql`
-Creates the MySQL database.
+The May 2026 demo dataset includes:
 
-### `02_schema.sql`
-Contains the full database schema:
-- table definitions
-- constraints
-- foreign keys
-- indexes
+- multiple wallets/accounts,
+- income categories and expense categories,
+- parent-child category hierarchy,
+- monthly budgets,
+- financial goals,
+- recurring transaction templates,
+- 42 financial transactions covering income, expenses, and transfers.
 
-### `03_sample_data.sql`
-Contains demo/sample data for:
-- users
-- accounts
-- categories
-- budgets
-- financial goals
-- recurring transactions
-- transactions
-
-### `04_queries.sql`
-Contains analytical SQL queries used for:
-- monthly income analysis
-- monthly expense analysis
-- net cashflow calculation
-- spending by category
-- wallet balance overview
-- recent transaction review
-- budget versus actual spending comparison
-- financial goal progress tracking
-- recurring transaction monitoring
+This data supports dashboard charts, category spending reports, budget alerts, transaction history, goal progress, and recurring transaction demonstrations.
 
 ---
 
-## 🔗 How the Website Connects to SQL
+## 11. Testing and Validation
 
-The website does **not** directly use the `.sql` files during normal runtime.
+The project was tested for:
 
-Instead:
-
-- the `.sql` files are used to **create**, **restore**, and **demonstrate** the database
-- the running web application connects to **MySQL** through **Django ORM**
-- Django automatically generates SQL queries behind the scenes based on models and views
-
-### In simple terms
-
-- 📄 `.sql` files = database setup and demonstration artifacts  
-- ⚙️ Django ORM = the layer that actually communicates with MySQL while the website is running  
-
-This means:
-
-- `02_schema.sql` recreates the table structure
-- `03_sample_data.sql` restores demo data
-- `04_queries.sql` demonstrates the SQL/database part of the project
-- the website itself reads and writes data through Django models
+- registration, login, and logout,
+- wallet creation and deletion,
+- category creation and hierarchy display,
+- income, expense, and transfer transactions,
+- automatic account balance updates,
+- transaction deletion and balance recalculation,
+- budget spent, remaining, usage percentage, and status calculation,
+- parent and child category spending aggregation,
+- financial goal progress calculation,
+- recurring transaction creation and manual application,
+- English/Vietnamese language toggle,
+- SQL query reporting consistency.
 
 ---
 
-## ✅ Testing Checklist
+## 12. Known Limitations
 
-Before submission, it is recommended to test the following:
-
-### Authentication
-- [ ] login page loads correctly
-- [ ] user can log in
-- [ ] user can log out
-
-### Dashboard
-- [ ] dashboard loads without error
-- [ ] income/expense summaries display correctly
-- [ ] charts and summary cards appear correctly
-
-### Wallets
-- [ ] create wallet
-- [ ] delete wallet
-- [ ] current balance displays correctly
-
-### Categories
-- [ ] create income category
-- [ ] create expense category
-- [ ] create child category
-- [ ] delete category
-
-### Transactions
-- [ ] create income transaction
-- [ ] create expense transaction
-- [ ] create transfer transaction
-- [ ] delete transaction
-- [ ] balances update automatically
-
-### Budgets
-- [ ] create budget
-- [ ] usage percentage updates correctly
-- [ ] delete budget
-
-### Goals
-- [ ] create goal
-- [ ] update goal progress
-- [ ] delete goal
-
-### Recurring Transactions
-- [ ] create recurring income
-- [ ] create recurring expense
-- [ ] create recurring transfer
-- [ ] apply recurring item manually
-- [ ] delete recurring item
-
-### Language Toggle
-- [ ] English mode works
-- [ ] Vietnamese mode works
-- [ ] main pages remain readable in both languages
+- The application is designed for local academic demonstration.
+- It does not connect to real bank APIs.
+- It does not process real payment transactions.
+- Production deployment, automated backups, and advanced access control are future improvements.
+- Optional SQL triggers should not be enabled together with Django balance update logic unless the Python balance update logic is disabled.
 
 ---
 
-## 🧯 Troubleshooting
+## 13. Future Improvements
 
-### Problem: database connection error
-Check:
-- MySQL server is running
-- database name is correct
-- MySQL username and password in `settings.py` are correct
-
-### Problem: missing Python package
-Run:
-
-```bash
-pip install -r requirements.txt
-```
-
-### Problem: imported user cannot log in
-Reset the password:
-
-```bash
-python manage.py changepassword taikhoantest
-```
-
-### Problem: tables not found
-Make sure:
-- `01_create_database.sql` was executed
-- `02_schema.sql` was imported successfully
-- the correct database name is set in `config/settings.py`
-
-### Problem: server does not start after editing Python files
-Check for:
-- indentation errors in Python
-- missing commas or brackets
-- invalid import statements
+- Add richer transaction search and export features.
+- Add predictive budgeting suggestions.
+- Add Docker deployment.
+- Add cloud deployment instructions.
+- Improve database backup and recovery automation.
+- Expand security roles and access control.
+- Further test stored procedures and triggers in a separate database environment.
 
 ---
 
-## 🚧 Future Improvements
+## 14. Submission Links
 
-Possible extensions for the system include:
-
-- richer filtering and search for transactions
-- export to Excel or PDF
-- recurring transaction automation scheduler
-- better data validation and suggestions
-- improved analytics and visualizations
-- user profile settings
-- mobile optimization
-- Docker deployment
-- cloud deployment
+| Item | Link |
+|---|---|
+| GitHub Repository | https://github.com/tunglam021006-lgtm/SQL_final_prj |
+| YouTube Presentation | https://youtu.be/I92ByVNMSEs |
 
 ---
 
-## 📝 Notes
+## 15. References
 
-- This project was created for academic and demonstration purposes.
-- Sample data is included to make testing and evaluation easier.
-- The interface supports both **English** and **Vietnamese**.
-- The project uses **Django ORM** for runtime database interaction, while SQL scripts are included for setup and evaluation.
-- If the project is shared with another user or instructor, they must configure MySQL locally before running the web application.
-
----
-
-## 👤 Author
-
-**Personal Finance Management Web Application**  
-Course project submission
+- Django Documentation: https://docs.djangoproject.com/
+- MySQL 8.0 Reference Manual: https://dev.mysql.com/doc/
+- Bootstrap Documentation: https://getbootstrap.com/docs/
+- ERDPlus: https://erdplus.com/
+- MySQL Workbench Manual: https://dev.mysql.com/doc/workbench/en/
+- Python Documentation: https://docs.python.org/
+- GitHub Docs: https://docs.github.com/
 
 ---
 
 <div align="center">
 
-### ✨ Thanks for visiting this project!
+### ✅ Project 13 – Personal Finance Management System
 
+**Relational database design + SQL scripting + Django web application**
 
 </div>
