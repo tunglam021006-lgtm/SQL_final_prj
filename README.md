@@ -14,7 +14,7 @@
 **Student ID:** 11245891  
 **Class:** DSEB 66B  
 **GitHub Repository:** https://github.com/tunglam021006-lgtm/SQL_final_prj  
-**YouTube Presentation:** https://youtu.be/I92ByVNMSEs
+**YouTube Presentation:** https://youtu.be/2hvN03izzIY
 
 </div>
 
